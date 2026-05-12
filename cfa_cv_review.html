@@ -424,6 +424,7 @@
     .site-header { flex-direction: column; gap: 12px; }
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
 </head>
 <body>
 <div class="page">
@@ -453,7 +454,7 @@
   <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
     <div class="upload-icon">&#128196;</div>
     <div class="upload-label">Drop CV here or click to browse</div>
-    <div class="upload-sub">PDF &middot; max 10 MB</div>
+    <div class="upload-sub">PDF &middot; DOCX &middot; max 10 MB</div>
     <div class="upload-fname" id="upload-fname" style="display:none"></div>
     <input type="file" id="file-input" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
   </div>
@@ -542,6 +543,7 @@ CRITICAL: Respond ONLY with a valid JSON object. No markdown fences. No preamble
 
 let cvBase64 = null;
 let cvMediaType = null;
+let cvTextContent = null; // extracted text for DOCX files
 let lastResult = null;
 
 const fileInput = document.getElementById('file-input');
@@ -565,25 +567,57 @@ function loadFile(file) {
   if (file.size > 10 * 1024 * 1024) { showError('File exceeds 10 MB limit.'); return; }
   const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
   const isDocx = file.name.endsWith('.docx') || file.type.includes('wordprocessingml');
-  if (!isPdf && !isDocx) { showError('Only PDF files are accepted.'); return; }
-  cvMediaType = isPdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  if (!isPdf && !isDocx) { showError('Only PDF and DOCX files are accepted.'); return; }
+
+  // Reset previous state
+  cvBase64 = null;
+  cvMediaType = null;
+  cvTextContent = null;
+
   const reader = new FileReader();
-  reader.onload = e => {
-    cvBase64 = e.target.result.split(',')[1];
-    uploadZone.classList.add('has-file');
-    const fname = document.getElementById('upload-fname');
-    fname.style.display = 'block';
-    fname.textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
-    updateBtn();
-  };
-  reader.readAsDataURL(file);
+
+  if (isPdf) {
+    cvMediaType = 'application/pdf';
+    reader.onload = e => {
+      cvBase64 = e.target.result.split(',')[1];
+      setFileUploaded(file);
+    };
+    reader.readAsDataURL(file);
+  } else {
+    // DOCX: extract text via mammoth, send as plain text to API
+    reader.onload = e => {
+      const arrayBuffer = e.target.result;
+      mammoth.extractRawText({ arrayBuffer })
+        .then(result => {
+          if (!result.value || result.value.trim().length < 50) {
+            showError('Could not extract text from this DOCX file. Please try converting to PDF.');
+            return;
+          }
+          cvTextContent = result.value;
+          setFileUploaded(file);
+        })
+        .catch(err => {
+          showError('Failed to read DOCX: ' + esc(err.message) + '. Try converting to PDF.');
+        });
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+function setFileUploaded(file) {
+  uploadZone.classList.add('has-file');
+  const fname = document.getElementById('upload-fname');
+  fname.style.display = 'block';
+  fname.textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
+  updateBtn();
 }
 
 document.getElementById('api-key').addEventListener('input', updateBtn);
 
 function updateBtn() {
   const key = document.getElementById('api-key').value.trim();
-  btnAnalyze.disabled = !(key && cvBase64);
+  const hasFile = !!(cvBase64 || cvTextContent);
+  btnAnalyze.disabled = !(key && hasFile);
 }
 
 function showError(msg) {
@@ -643,6 +677,11 @@ async function runReview() {
   }, 4000);
 
   try {
+    // Build content block: PDF uses native document type; DOCX uses extracted text
+    const cvContentBlock = cvBase64
+      ? { type: 'document', source: { type: 'base64', media_type: cvMediaType, data: cvBase64 } }
+      : { type: 'text', text: 'CV TEXT (extracted from DOCX):\n\n' + cvTextContent };
+
     const body = {
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
@@ -650,10 +689,7 @@ async function runReview() {
       messages: [{
         role: 'user',
         content: [
-          {
-            type: 'document',
-            source: { type: 'base64', media_type: cvMediaType, data: cvBase64 }
-          },
+          cvContentBlock,
           {
             type: 'text',
             text: 'Please review this CV according to the cv_review_generic skill. ' + ctx + ' Return only the JSON object.'
