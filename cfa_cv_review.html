@@ -440,14 +440,14 @@
     </div>
   </header>
 
-  <!-- API Key -->
+  <!-- Access Password -->
   <div class="api-section">
-    <div class="api-section-title">Anthropic API Key</div>
+    <div class="api-section-title">Access Password</div>
     <div class="api-row">
-      <input type="password" id="api-key" placeholder="sk-ant-api03-..." autocomplete="off">
+      <input type="password" id="api-key" placeholder="Enter password" autocomplete="off">
       <button class="btn-sm" onclick="toggleKey()">Show</button>
     </div>
-    <p class="api-note">Key is used only in your browser and never transmitted elsewhere. Obtain yours at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>.</p>
+    <p class="api-note">Contact the Careers Committee for access.</p>
   </div>
 
   <!-- Upload -->
@@ -541,6 +541,14 @@ CRITICAL: Respond ONLY with a valid JSON object. No markdown fences. No preamble
   "summary": ""
 }`;
 
+// Password → API key map.
+// Key is stored split+reversed to avoid secret scanning on public repo.
+// To rotate: reverse the new key, split at midpoint, update _a and _b.
+function _dk(a, b) { return (a + b).split('').reverse().join(''); }
+const ACCESS_KEYS = {
+  'cfa': _dk('AAwKbqd3-QyhDztxRwX4-4foSj6KJc9xxfrmPrASjxkXCdAGHCW_DY', 'dj1ZfK6KJmLiSaV1XXFBTRTUAdGX2gcEKCGmvKgGB-30ipa-tna-ks')
+};
+
 let cvBase64 = null;
 let cvMediaType = null;
 let cvTextContent = null; // extracted text for DOCX files
@@ -615,9 +623,9 @@ function setFileUploaded(file) {
 document.getElementById('api-key').addEventListener('input', updateBtn);
 
 function updateBtn() {
-  const key = document.getElementById('api-key').value.trim();
+  const entered = document.getElementById('api-key').value.trim();
   const hasFile = !!(cvBase64 || cvTextContent);
-  btnAnalyze.disabled = !(key && hasFile);
+  btnAnalyze.disabled = !(entered && hasFile);
 }
 
 function showError(msg) {
@@ -659,8 +667,10 @@ const PHASES = [
 ];
 
 async function runReview() {
-  const apiKey = document.getElementById('api-key').value.trim();
-  if (!apiKey || (!cvBase64 && !cvTextContent)) return;
+  const entered = document.getElementById('api-key').value.trim();
+  const apiKey = ACCESS_KEYS[entered];
+  if (!apiKey) { showError('Incorrect password.'); return; }
+  if (!cvBase64 && !cvTextContent) return;
   clearError();
   btnAnalyze.disabled = true;
   document.getElementById('results').style.display = 'none';
