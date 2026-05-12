@@ -660,7 +660,7 @@ const PHASES = [
 
 async function runReview() {
   const apiKey = document.getElementById('api-key').value.trim();
-  if (!apiKey || !cvBase64) return;
+  if (!apiKey || (!cvBase64 && !cvTextContent)) return;
   clearError();
   btnAnalyze.disabled = true;
   document.getElementById('results').style.display = 'none';
