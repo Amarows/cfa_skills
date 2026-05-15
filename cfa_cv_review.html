@@ -560,8 +560,8 @@ Extract ALL of the following:
 - cv_length_pages: estimated
 - private_cloud_links: any QR codes or links to OneDrive/Dropbox/Google Drive private storage (Y/N) — CRITICAL flag if Y
 - footer_present: name or email repeated in page footer (Y/N)
-- headline_present: role-specific headline at top of CV (Y/N)
-- core_competencies_present: dedicated keywords/skills block (Y/N)
+- headline_present: role-specific headline at top of CV (Y/N). DETECTION RULE: a headline is any short line (typically 3–8 words) that names a role type and appears between the contact block and the summary paragraph. It may be all-caps, bold, or centred. Examples: "AI PRODUCT LEADER & TECHNICAL STRATEGIST", "Senior Risk Manager", "Quantitative Analyst | Asset Management". Do NOT require a section label — detect by position and content.
+- core_competencies_present: dedicated keywords/skills block present before the Experience section (Y/N). DETECTION RULE: this is typically a single bold line or short paragraph of role-specific terms separated by bullets (•) or pipes (|), appearing between the summary and the Experience section. It does not need to be labelled "Core Competencies" — detect by structure and position.
 - unexplained_gaps: any employment gaps > 6 months not explained (Y/N, note period)
 - format_issues: mixed fonts, text boxes, shaded backgrounds, double section separators (describe or "none")
 
@@ -612,13 +612,13 @@ DIMENSION 3 – Financial Industry Signals — weight 0.15
 
 Score additively. Start at 0.
 
-+25 pts: relevant certifications (CFA, FRM, CAIA, CIIA, AZEK, PRM) present AND positioned in a dedicated section near the top of the CV (above or immediately after contact details). Award +15 pts only if present but buried in the Education section.
++25 pts: relevant certifications (CFA, FRM, CAIA, CIIA, AZEK, PRM) present AND prominently placed. Prominent placement includes: (a) appended directly to the candidate's name in the header (e.g. "Alexey Malashonak, CFA, FRM") — this is the most prominent possible placement and always qualifies for full points; (b) a dedicated Certifications section appearing before or immediately after the contact block. Award +15 pts only if certifications are present solely in the Education section with no mention elsewhere.
 +25 pts: financial products, asset classes, or regulatory frameworks named in the experience body (Basel II/III/IV, IFRS, ISDA, CVA/DVA, PFE, FINMA, GRI, Swiss GAAP FER, PD/LGD/EAD, CCR, GIPS). Award only if named in the context of actual work performed, not just listed in a skills table.
 +15 pts: industry-standard platforms or tools named in experience body (Bloomberg, Murex, Calypso, FactSet, RiskMetrics, Refinitiv, MicroStrategy, SAS). Award only if referenced in context of actual use.
 +10 pts: dedicated hard skills or technical section present that confirms technical depth beyond generic labels.
 
-HARD DEDUCTIONS:
--10 pts: certifications present but buried in Education section (already reflected in the +15 vs +25 above — do not double-deduct; only apply this if you awarded +25 and then discover they are buried)
+HARD DEDUCTIONS (D3):
+-0 pts: no additional deduction beyond the +15 vs +25 distinction above. Do not deduct separately for placement.
 
 DIMENSION 4 – Positioning and Professional Identity — weight 0.15
 
@@ -632,7 +632,7 @@ Score additively. Start at 0.
 HARD DEDUCTIONS — apply each occurrence:
 -10 pts per filler phrase in summary or headline: "proven track record", "strong foundation in", "results-oriented", "passionate about", "dynamic professional", "deep understanding of" (unless immediately followed by a specific named example).
 -15 pts: summary opening sentence exceeds 50 words.
--20 pts: no headline present at Director/MD level.
+-20 pts: no headline present at Director/MD level. Apply the same detection rule as Step 1: a headline is any short role-type line between the contact block and the summary, regardless of formatting. Do NOT apply this deduction if a headline is present but not in a specific expected format.
 
 DIMENSION 5 – Structure and Readability — weight 0.15
 
@@ -1184,6 +1184,7 @@ function copyResults() {
 </script>
 </body>
 </html>
+
 
 
 
