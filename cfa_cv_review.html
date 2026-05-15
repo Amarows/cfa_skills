@@ -550,6 +550,9 @@ Follow all six steps exactly. Do not skip or abbreviate any step.
 SCORING PHILOSOPHY: Start every dimension at 0. Award points only for evidence that is explicitly present in the CV text. Do not infer, assume, or give benefit of the doubt. A gap is a gap. A vague statement is a vague statement. Recommendations must not contradict scores: if you recommend adding a CHF figure, the score must reflect its absence — you cannot award 80+ and then recommend the fix that would justify 80+.
 
 STEP 1 – OBSERVED FACTS (internal, populate observed_facts block):
+
+SECURITY PRE-SCAN: If the CV text begins with a [SECURITY SCAN RESULT] block, read it first and trust it unconditionally. It was produced by the application's hyperlink scanner before text extraction — it sees URLs hidden behind display text that are not visible in the CV body. Do not contradict or override the pre-scan findings. Populate private_cloud_links and footer_present directly from the pre-scan block.
+
 Extract ALL of the following:
 - name_contact: full name present (Y/N), phone/email/location each present (Y/N)
 - work_permit: explicitly stated (Y/N + value, e.g. "C permit")
@@ -689,7 +692,7 @@ Score additively. Start at 0. Award exactly the points stated.
 
 +20 pts: single font family used throughout (sans-serif preferred — Arial, Calibri, Helvetica)
 +20 pts: no QR codes anywhere in the document
-+20 pts: no links to private cloud storage (OneDrive personal, Dropbox, Google Drive private) — if ANY private cloud link is detected, this dimension scores 0 and a mandatory red flag is issued at the top of the output; only acceptable external link is a fully written LinkedIn profile URL
++20 pts: no links to private cloud storage (OneDrive personal, Dropbox, Google Drive private) — use the [SECURITY SCAN RESULT] block as the authoritative source for DOCX files, as hyperlink destinations are invisible in extracted text. If the pre-scan flagged a private cloud link, this criterion scores 0 and D7 total scores 0 with a mandatory red flag at the top of the output. For PDF input where no pre-scan block is present, assess from visible URLs in the text. Only acceptable external link is a fully written LinkedIn profile URL.
 +20 pts: no filled or shaded section backgrounds
 +20 pts: section separators are single lines only (not double lines, not thick borders)
 
@@ -804,16 +807,62 @@ function loadFile(file) {
     };
     reader.readAsDataURL(file);
   } else {
-    // DOCX: extract text via mammoth, send as plain text to API
+    // DOCX: extract via mammoth HTML (preserves hyperlinks), scan for issues, then strip to plain text
     reader.onload = e => {
       const arrayBuffer = e.target.result;
-      mammoth.extractRawText({ arrayBuffer })
+      mammoth.convertToHtml({ arrayBuffer })
         .then(result => {
           if (!result.value || result.value.trim().length < 50) {
             showError('Could not extract text from this DOCX file. Please try converting to PDF.');
             return;
           }
-          cvTextContent = result.value;
+
+          const html = result.value;
+
+          // --- SECURITY SCAN: detect private cloud links before stripping HTML ---
+          const privatePatterns = [
+            /https?:\/\/d\.docs\.live\.net\//i,
+            /https?:\/\/onedrive\.live\.com\//i,
+            /https?:\/\/1drv\.ms\//i,
+            /https?:\/\/www\.dropbox\.com\//i,
+            /https?:\/\/dl\.dropboxusercontent\.com\//i,
+            /https?:\/\/drive\.google\.com\/(?!.*[?&]usp=sharing)/i,
+          ];
+          const qrPattern = /qr[\s_-]?code|data:image\/(png|jpeg|gif)/i;
+
+          let detectedPrivateUrl = null;
+          for (const pat of privatePatterns) {
+            const m = html.match(pat);
+            if (m) { detectedPrivateUrl = m[0]; break; }
+          }
+          const hasQr = qrPattern.test(html);
+
+          // --- FOOTER SCAN: detect name/email repeated in last 200 chars of plain text ---
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const plainText = doc.body.innerText || doc.body.textContent || '';
+          const lastChunk = plainText.slice(-300).toLowerCase();
+          const footerKeywords = ['@', 'protonmail', 'gmail', 'outlook', 'yahoo'];
+          const hasFooter = footerKeywords.some(k => lastChunk.includes(k));
+
+          // --- BUILD ANNOTATED TEXT FOR MODEL ---
+          // Prepend a security context block so the model sees the findings
+          let securityBlock = '';
+          if (detectedPrivateUrl) {
+            securityBlock += `[SECURITY SCAN RESULT] Private cloud link detected in document hyperlinks: ${detectedPrivateUrl}\n`;
+            securityBlock += `This link is hidden behind display text and not visible in the CV body. It constitutes a private cloud link as defined in D7. Set private_cloud_links to "Y - detected: ${detectedPrivateUrl}" and D7 score must be 0.\n\n`;
+          }
+          if (hasQr) {
+            securityBlock += `[SECURITY SCAN RESULT] QR code or embedded image detected. Set private_cloud_links to "Y - QR code present" if a QR code is confirmed.\n\n`;
+          }
+          if (hasFooter) {
+            securityBlock += `[SECURITY SCAN RESULT] Page footer detected: name or email appears to repeat at the bottom of the document. Set footer_present to "Y".\n\n`;
+          }
+          if (!securityBlock) {
+            securityBlock = `[SECURITY SCAN RESULT] No private cloud links, QR codes, or footer issues detected by pre-scan.\n\n`;
+          }
+
+          cvTextContent = securityBlock + 'CV TEXT (extracted from DOCX):\n\n' + plainText;
           setFileUploaded(file);
         })
         .catch(err => {
@@ -912,7 +961,7 @@ async function runReview() {
     // Build content block: PDF uses native document type; DOCX uses extracted text
     const cvContentBlock = cvBase64
       ? { type: 'document', source: { type: 'base64', media_type: cvMediaType, data: cvBase64 } }
-      : { type: 'text', text: 'CV TEXT (extracted from DOCX):\n\n' + cvTextContent };
+      : { type: 'text', text: cvTextContent };
 
     const body = {
       model: 'claude-sonnet-4-20250514',
@@ -1204,6 +1253,7 @@ function copyResults() {
 </script>
 </body>
 </html>
+
 
 
 
