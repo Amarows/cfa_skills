@@ -563,9 +563,15 @@ Extract ALL of the following:
 - headline_present: role-specific headline at top of CV (Y/N). DETECTION RULE: a headline is any short line (typically 3–8 words) that names a role type and appears between the contact block and the summary paragraph. It may be all-caps, bold, or centred. Examples: "AI PRODUCT LEADER & TECHNICAL STRATEGIST", "Senior Risk Manager", "Quantitative Analyst | Asset Management". Do NOT require a section label — detect by position and content.
 - core_competencies_present: dedicated keywords/skills block present before the Experience section (Y/N). DETECTION RULE: this is typically a single bold line or short paragraph of role-specific terms separated by bullets (•) or pipes (|), appearing between the summary and the Experience section. It does not need to be labelled "Core Competencies" — detect by structure and position.
 - unexplained_gaps: any employment gaps > 6 months not explained (Y/N, note period)
+- director_level_financial_figure: scan the most recent role only. Does it contain at least one explicit CHF or USD amount representing cost saved, revenue generated, budget managed, or P&L impact? User counts, adoption percentages, efficiency ratios, and team size figures do NOT qualify. Answer Y or N and quote the exact phrase if Y. Example of qualifying: "saved CHF 2M", "managed USD 50M budget", "generated CHF 1.2M revenue". Example of non-qualifying: "600+ users", "95% adoption", "material cost reduction", "USD 100M+ portfolios" (team figure, not candidate's own financial contribution).
 - format_issues: mixed fonts, text boxes, shaded backgrounds, double section separators (describe or "none")
 
 ANTI-HALLUCINATION GATE: Do not proceed to Step 2 if CV text was not fully readable. State the gap and stop.
+
+D1 SENIORITY CEILING GATE: Before scoring D1, read the value of director_level_financial_figure from Step 1.
+- If director_level_financial_figure = N: D1 maximum is 60. You must not award more than 60 regardless of any other evidence. This is a hard cap, not a guideline.
+- If director_level_financial_figure = Y: ceiling does not apply; score normally.
+Record this gate result in your reasoning before computing D1.
 
 PRE-SCORE EVIDENCE REQUIREMENT: Before assigning any score above 60 on any dimension, you must list in your internal reasoning (not in the output JSON) the specific CV bullets or sections that justify that score. If you cannot list them, the score must be 60 or below.
 
@@ -588,9 +594,10 @@ HARD DEDUCTIONS — apply each that is present, no discretion:
 -15 pts: most recent role described primarily in narrative paragraphs rather than structured bullets. Narrative paragraphs that list responsibilities are duty statements, not achievements.
 -10 pts per filler phrase: "responsible for", "strong leadership", "excellent communication skills", "deep understanding of", "results-oriented" — each occurrence reduces score.
 
-SENIORITY CEILING — apply if seniority is Director or above (or if CV claims Director-level progression):
-If the most recent role does not contain at least one bullet with an explicit CHF or USD cost saving, revenue figure, P&L impact, or capital/budget amount: MAXIMUM SCORE FOR THIS DIMENSION IS 60, regardless of other evidence.
-If the most recent role is described entirely in paragraphs without structured bullets: MAXIMUM SCORE IS 45.
+SENIORITY CEILING — mandatory, enforced by gate computed in Step 1:
+If director_level_financial_figure = N: cap D1 at 60. Do not exceed this regardless of base score or deductions.
+If the most recent role is described entirely in paragraphs without any structured bullets: cap D1 at 45.
+Apply the lower of the two caps if both conditions are true.
 
 FLOOR: minimum score is 0 (negative arithmetic does not go below 0).
 
@@ -614,8 +621,8 @@ Score additively. Start at 0.
 
 +25 pts: relevant certifications (CFA, FRM, CAIA, CIIA, AZEK, PRM) present AND prominently placed. Prominent placement includes: (a) appended directly to the candidate's name in the header (e.g. "Alexey Malashonak, CFA, FRM") — this is the most prominent possible placement and always qualifies for full points; (b) a dedicated Certifications section appearing before or immediately after the contact block. Award +15 pts only if certifications are present solely in the Education section with no mention elsewhere.
 +25 pts: financial products, asset classes, or regulatory frameworks named in the experience body (Basel II/III/IV, IFRS, ISDA, CVA/DVA, PFE, FINMA, GRI, Swiss GAAP FER, PD/LGD/EAD, CCR, GIPS). Award only if named in the context of actual work performed, not just listed in a skills table.
-+15 pts: industry-standard platforms or tools named in experience body (Bloomberg, Murex, Calypso, FactSet, RiskMetrics, Refinitiv, MicroStrategy, SAS). Award only if referenced in context of actual use.
-+10 pts: dedicated hard skills or technical section present that confirms technical depth beyond generic labels.
++15 pts: at least one of the following platforms or tools is named in the experience body (not only in a skills table) in the context of actual work performed: Bloomberg, Murex, Calypso, FactSet, RiskMetrics, Refinitiv, Eikon, MicroStrategy, SAS, Databricks, Power BI, Temenos, Finastra, MSCI, Axioma, Sophis, Numerix, OpenPages, Riskonnect, FIS, Finastra, Misys, SimCorp, Charles River, Aladdin, Markit, IHS Markit, MSCI Barra, Quantifi, Openlink, Allegro. Award 0 pts if the tool appears only in a skills/tools table without a work context sentence.
++10 pts: a dedicated section named Skills, Technical Skills, Technological Expertise, Tools, Competencies, or similar is present AND contains 5 or more distinct named items. Award 0 pts if the section is absent or has fewer than 5 items.
 
 HARD DEDUCTIONS (D3):
 -0 pts: no additional deduction beyond the +15 vs +25 distinction above. Do not deduct separately for placement.
@@ -708,6 +715,7 @@ CRITICAL: Respond ONLY with a valid JSON object. No markdown fences. No preamble
     "headline_present": "",
     "core_competencies_present": "",
     "unexplained_gaps": "",
+    "director_level_financial_figure": "",
     "format_issues": ""
   },
   "scores": {
@@ -1184,6 +1192,7 @@ function copyResults() {
 </script>
 </body>
 </html>
+
 
 
 
