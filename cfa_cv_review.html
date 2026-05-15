@@ -391,6 +391,28 @@
   .fact-row strong { color: var(--text); font-weight: 600; }
   .warn-text { color: var(--amber); }
 
+  /* Skill version banner */
+  .skill-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--blue-bg);
+    border: 0.5px solid var(--blue);
+    margin-bottom: 1.5rem;
+    font-size: 12px;
+    color: var(--blue);
+  }
+  .skill-banner a {
+    color: var(--blue);
+    text-decoration: none;
+    font-weight: 600;
+    border-bottom: 0.5px solid currentColor;
+  }
+  .skill-banner a:hover { opacity: 0.75; }
+  .skill-banner-sep { opacity: 0.35; }
+
   /* Copy btn */
   .btn-copy {
     font-size: 12px;
@@ -659,6 +681,10 @@ const DIM_WEIGHTS = {
   relevance_breadth: '15%', structure_readability: '10%', language_tone: '10%'
 };
 
+const SKILL_NAME = 'cv_review_generic';
+const SKILL_VERSION = '0.2.0';
+const SKILL_URL = 'https://github.com/Amarows/cfa_skills/blob/main/skills/cv_review_generic/SKILL.md';
+
 const PHASES = [
   'Extracting observed facts from CV\u2026',
   'Scoring six dimensions\u2026',
@@ -766,7 +792,17 @@ function renderResults(r) {
 
   let h = '';
 
-  // Overall score
+  // Skill version banner
+  const now = new Date();
+  const ts = now.toISOString().slice(0,10) + '\u00a0' + now.toTimeString().slice(0,5);
+  h += `<div class="skill-banner">
+    <span>Evaluated using</span>
+    <a href="${SKILL_URL}" target="_blank">${esc(SKILL_NAME)}</a>
+    <span class="skill-banner-sep">|</span>
+    <span>v${esc(SKILL_VERSION)}</span>
+    <span class="skill-banner-sep">|</span>
+    <span>${ts}</span>
+  </div>`;
   h += `<div class="sec-label">Overall Score</div>
   <div class="score-header">
     <div class="score-big c-${scoreColor(ws)}">${ws.toFixed(1)}</div>
@@ -880,3 +916,4 @@ function copyResults() {
 </script>
 </body>
 </html>
+
