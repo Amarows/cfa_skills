@@ -405,7 +405,44 @@
     border-bottom: 0.5px solid currentColor;
   }
   .skill-banner a:hover { opacity: 0.75; }
-  .skill-banner-sep { opacity: 0.35; }
+  .skill-banner-sep { opacity: 0.35; margin: 0 2px; }
+
+  /* Diagnostics panel */
+  .diag-toggle {
+    font-size: 11px;
+    color: var(--text3);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 1.5rem;
+    display: block;
+    font-family: var(--sans);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .diag-toggle:hover { color: var(--text2); }
+  .diag-panel {
+    margin-top: 0.75rem;
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    font-size: 11px;
+    font-family: monospace;
+    color: var(--text2);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  .diag-row { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; border-bottom: 0.5px solid var(--border); }
+  .diag-row:last-child { border-bottom: none; }
+  .diag-key { color: var(--text3); }
+  .diag-val { color: var(--text); font-weight: 600; }
+  .diag-warn { color: var(--amber); font-weight: 600; }
+  .diag-ok { color: var(--green); font-weight: 600; }
 
   /* Copy btn */
   .btn-copy {
@@ -506,26 +543,99 @@
 </div>
 
 <script>
-const SYSTEM_PROMPT = `You are a senior member of the CFA Society Switzerland Careers Committee conducting a structured CV review using the cv_review_generic skill.
+const SYSTEM_PROMPT = `You are a senior member of the CFA Society Switzerland Careers Committee conducting a structured CV review using the cv_review_generic skill v0.2.0.
 
-Follow all five steps exactly:
+Follow all six steps exactly. Do not skip or abbreviate any step.
 
-STEP 1 – OBSERVED FACTS (internal only, populate the observed_facts JSON block):
-Extract: name/contact present (Y/N), work permit stated (Y/N + value), languages with proficiency, certifications, estimated years of experience, number of roles, CV length in pages, format issues (text boxes, graphics, tables used for layout).
+STEP 1 – OBSERVED FACTS (internal, populate observed_facts block):
+Extract ALL of the following:
+- name_contact: full name present (Y/N), phone/email/location each present (Y/N)
+- work_permit: explicitly stated (Y/N + value, e.g. "C permit")
+- languages: list each language with the proficiency label given. Flag if European Framework codes (A1–C2) are absent.
+- certifications: list all; note whether each appears near the top of the CV or buried in the Education section
+- years_experience: estimated total
+- num_roles: count of distinct employer roles listed
+- cv_length_pages: estimated
+- private_cloud_links: any QR codes or links to OneDrive/Dropbox/Google Drive private storage (Y/N) — CRITICAL flag if Y
+- footer_present: name or email repeated in page footer (Y/N)
+- headline_present: role-specific headline at top of CV (Y/N)
+- core_competencies_present: dedicated keywords/skills block (Y/N)
+- unexplained_gaps: any employment gaps > 6 months not explained (Y/N, note period)
+- format_issues: mixed fonts, text boxes, shaded backgrounds, double section separators (describe or "none")
 
-STEP 2 – SCORING (0–100 per dimension, exact weights):
-1. Achievement Clarity – 25%: 80-100 = majority of roles quantified; 50-79 = mixed; 0-49 = duty-based only.
-2. Swiss Market Fit – 20%: +20 pts each for work permit stated, languages with levels, Swiss employer/regulatory context, Swiss location, DOB/nationality removed.
-3. Financial Industry Signals – 20%: +25 pts each for certifications (CFA/FRM/CAIA/CIIA/AZEK/PRM, max 50), financial products/asset classes/regulatory frameworks named, industry tools named (Bloomberg, Murex, Calypso, etc.).
-4. Relevance Breadth – 15%: coherent professional identity, targeted headline/summary.
-5. Structure and Readability – 10%: reverse chronological, consistent dates, appropriate length, no text boxes/tables/graphics.
-6. Language and Tone – 10%: action verbs, no first-person pronouns, no grammar errors, no "References available".
+ANTI-HALLUCINATION GATE: Do not proceed to Step 2 if CV text was not fully readable. State the gap and stop.
 
-STEP 3 – Per-dimension commentary: 1-2 sentences on strengths + 2-3 specific actionable recommendations each referencing a specific CV section.
+STEP 2 – SCORING (0–100 per dimension, EXACT weights below — do not deviate):
 
-STEP 4 – Top 3 priority recommendations ranked by expected impact on interview conversion.
+DIMENSION 1 – Achievement Clarity and Evidence — weight 0.25
+- 80–100: majority of roles in last 10 years have quantified achievements. Each bullet includes: (a) candidate's specific contribution, (b) financial figure or measurable outcome, (c) business context, (d) impact. Duty-based statements rare.
+- 50–79: some quantification; mix of achievements and duty lists.
+- 0–49: predominantly duty-based; high-level generalisations without figures.
+RED FLAGS (reduce score): "responsible for", "strong leadership", "excellent communication" without evidence; vague outcomes like "material cost reduction" without a CHF figure; large figures attributed to a team without stating the candidate's specific role; 300%+ fund performance without specifying individual contribution.
+SENIORITY: Director/MD level requires P&L figures, capital amounts, or explicit CHF cost savings. Generic high-level descriptions are a significant negative at this level.
 
-STEP 5 – 3-5 sentence client-ready summary, constructive and professional.
+DIMENSION 2 – Swiss Market Fit — weight 0.15
+Score +20 pts each (max 100) for:
+(a) work permit status explicitly stated
+(b) languages listed WITH European Framework levels (A1–C2) or equivalent formal scale — text labels like "Professional level" do NOT qualify for full points; award 10/20 if label present but no framework code
+(c) Swiss employer names or Swiss regulatory context referenced in experience
+(d) location in Switzerland stated in contact details
+(e) date of birth AND nationality both absent
+
+DIMENSION 3 – Financial Industry Signals — weight 0.15
+- Relevant certifications (CFA, FRM, CAIA, CIIA, AZEK, PRM) prominent near top of CV: +25 pts each, max 50. Deduct 10 pts if certifications are buried in Education section rather than surfaced near the top.
+- Financial products, asset classes, regulatory frameworks named (Basel, IFRS, ISDA, CVA/DVA, PFE, FINMA, GRI, Swiss GAAP FER): +25 pts
+- Industry-standard tools or platforms named (Bloomberg, Murex, Calypso, FactSet, RiskMetrics, MicroStrategy, etc.): +15 pts
+- Hard skills / technical section present confirming technical depth: +10 pts
+
+DIMENSION 4 – Positioning and Professional Identity — weight 0.15
+- 80–100: role-specific headline present; summary 60–90 words focused on top 2–3 achievements with evidence; core competencies block with 3–5 targeted keywords; no repetition across sections.
+- 50–79: some positioning but diluted; recruiter must read multiple sections.
+- 0–49: no headline; summary generic or >150 words; sections repeat same content.
+RED FLAGS: no headline at senior level; summary >90 words; opening sentence >50 words; "proven track record", "strong foundation in", "results-oriented", "passionate about" without specific evidence; three or more sections repeating the same content.
+
+DIMENSION 5 – Structure and Readability — weight 0.15
+- Reverse chronological order (Y/N)
+- Consistent date format throughout (Y/N)
+- Appropriate length: <10 yrs = 1–2 pages; 10–20 yrs = 2–3 pages; >20 yrs = max 3 pages
+- No half-empty pages
+- Early career handled correctly: last 4–5 roles with full bullets; earlier roles brief listing only; primary/secondary education removed if >35 years ago
+- No "Curriculum Vitae" title in header
+- No signature or date at document bottom
+- No name/email repeated in page footer
+- No unexplained employment gaps > 6 months
+
+DIMENSION 6 – Language and Tone — weight 0.05
+- Action verbs opening each achievement statement (Y/N)
+- No first-person pronouns (Y/N)
+- No grammar or spelling errors (Y/N)
+- No "References available upon request" (Y/N)
+- No generic filler: "results-oriented", "dynamic professional", "passionate about", "strong track record of delivering", "proven track record", "strong foundation in", "deep understanding of" (unless followed by specific evidence) — penalise each occurrence
+
+DIMENSION 7 – Document Hygiene and Modern Formatting — weight 0.10
+Score +20 pts each (max 100) for:
+(a) single font used throughout (sans-serif preferred)
+(b) no QR codes present
+(c) no links to private cloud storage (OneDrive personal, Dropbox, Google Drive private) — MANDATORY SCORE 0 AND RED FLAG if any private cloud link detected; only acceptable external link is a fully written LinkedIn URL
+(d) no filled/shaded section backgrounds
+(e) section separators: single line above section only, not double
+
+WEIGHTED OVERALL SCORE = D1×0.25 + D2×0.15 + D3×0.15 + D4×0.15 + D5×0.15 + D6×0.05 + D7×0.10
+Compute this exactly. Do not round intermediate values.
+
+STEP 3 – Per-dimension commentary:
+For each of the 7 dimensions: 1–2 sentences on what is done well (grounded in observed facts) + 2–3 specific actionable recommendations each referencing the exact CV section.
+
+STEP 4 – Triage block:
+Strengths: 3–5 observable positives
+Weaknesses: 3–5 specific gaps, each referencing a section
+Missing sections recommended: sections absent but expected for this seniority
+
+STEP 5 – Top 3 priority recommendations ranked by expected impact on interview conversion.
+Format: action | why it matters | specific section to edit.
+If a private cloud link (QR/OneDrive/Dropbox) is present, that is ALWAYS Priority 1.
+
+STEP 6 – 3–5 sentence client-ready summary. Constructive, direct, professional. Do not inflate.
 
 CRITICAL: Respond ONLY with a valid JSON object. No markdown fences. No preamble. Exact schema:
 
@@ -538,17 +648,28 @@ CRITICAL: Respond ONLY with a valid JSON object. No markdown fences. No preamble
     "years_experience": "",
     "num_roles": 0,
     "cv_length_pages": "",
+    "private_cloud_links": "",
+    "footer_present": "",
+    "headline_present": "",
+    "core_competencies_present": "",
+    "unexplained_gaps": "",
     "format_issues": ""
   },
   "scores": {
-    "achievement_clarity": { "score": 0, "weight": 0.25, "strengths": "", "recommendations": [] },
-    "swiss_market_fit": { "score": 0, "weight": 0.20, "strengths": "", "recommendations": [] },
-    "financial_industry_signals": { "score": 0, "weight": 0.20, "strengths": "", "recommendations": [] },
-    "relevance_breadth": { "score": 0, "weight": 0.15, "strengths": "", "recommendations": [] },
-    "structure_readability": { "score": 0, "weight": 0.10, "strengths": "", "recommendations": [] },
-    "language_tone": { "score": 0, "weight": 0.10, "strengths": "", "recommendations": [] }
+    "achievement_clarity":        { "score": 0, "weight": 0.25, "strengths": "", "recommendations": [] },
+    "swiss_market_fit":           { "score": 0, "weight": 0.15, "strengths": "", "recommendations": [] },
+    "financial_industry_signals": { "score": 0, "weight": 0.15, "strengths": "", "recommendations": [] },
+    "positioning_identity":       { "score": 0, "weight": 0.15, "strengths": "", "recommendations": [] },
+    "structure_readability":      { "score": 0, "weight": 0.15, "strengths": "", "recommendations": [] },
+    "language_tone":              { "score": 0, "weight": 0.05, "strengths": "", "recommendations": [] },
+    "document_hygiene":           { "score": 0, "weight": 0.10, "strengths": "", "recommendations": [] }
   },
   "weighted_score": 0.0,
+  "triage": {
+    "strengths": [],
+    "weaknesses": [],
+    "missing_sections": []
+  },
   "priority_recommendations": [
     { "action": "", "why": "", "section": "" },
     { "action": "", "why": "", "section": "" },
@@ -662,17 +783,23 @@ function setStatus(msg, loading = true) {
 }
 
 const DIM_LABELS = {
-  achievement_clarity: 'Achievement Clarity',
-  swiss_market_fit: 'Swiss Market Fit',
+  achievement_clarity:        'Achievement Clarity and Evidence',
+  swiss_market_fit:           'Swiss Market Fit',
   financial_industry_signals: 'Financial Industry Signals',
-  relevance_breadth: 'Relevance Breadth',
-  structure_readability: 'Structure and Readability',
-  language_tone: 'Language and Tone'
+  positioning_identity:       'Positioning and Professional Identity',
+  structure_readability:      'Structure and Readability',
+  language_tone:              'Language and Tone',
+  document_hygiene:           'Document Hygiene and Formatting'
 };
 
 const DIM_WEIGHTS = {
-  achievement_clarity: '25%', swiss_market_fit: '20%', financial_industry_signals: '20%',
-  relevance_breadth: '15%', structure_readability: '10%', language_tone: '10%'
+  achievement_clarity:        '25%',
+  swiss_market_fit:           '15%',
+  financial_industry_signals: '15%',
+  positioning_identity:       '15%',
+  structure_readability:      '15%',
+  language_tone:              '5%',
+  document_hygiene:           '10%'
 };
 
 const SKILL_NAME = 'cv_review_generic';
@@ -782,7 +909,7 @@ function renderResults(r) {
   lastResult = r;
   const ws = typeof r.weighted_score === 'number' ? r.weighted_score : 0;
   const [vLabel, vColor] = verdict(ws);
-  const dimOrder = ['achievement_clarity', 'swiss_market_fit', 'financial_industry_signals', 'relevance_breadth', 'structure_readability', 'language_tone'];
+  const dimOrder = ['achievement_clarity', 'swiss_market_fit', 'financial_industry_signals', 'positioning_identity', 'structure_readability', 'language_tone', 'document_hygiene'];
 
   let h = '';
 
@@ -797,6 +924,15 @@ function renderResults(r) {
     <span class="skill-banner-sep">|</span>
     <span>${ts}</span>
   </div>`;
+
+  // Red flag: private cloud link
+  const f = r.observed_facts || {};
+  if (f.private_cloud_links && f.private_cloud_links.startsWith('Y')) {
+    h += `<div class="error-msg" style="display:block;margin-bottom:1rem;">
+      <strong>&#9888; CYBERSECURITY RED FLAG</strong> – Private cloud link detected (OneDrive / Dropbox / Google Drive personal). Document Hygiene score is 0. This must be corrected before submission to any employer.
+    </div>`;
+  }
+
   h += `<div class="sec-label">Overall Score</div>
   <div class="score-header">
     <div class="score-big c-${scoreColor(ws)}">${ws.toFixed(1)}</div>
@@ -805,7 +941,7 @@ function renderResults(r) {
   <div class="divider"></div>`;
 
   // Dimension grid
-  h += `<div class="sec-label">Six-Dimension Breakdown</div><div class="dim-grid">`;
+  h += `<div class="sec-label">Seven-Dimension Breakdown</div><div class="dim-grid">`;
   dimOrder.forEach(k => {
     const d = r.scores[k] || {};
     const s = typeof d.score === 'number' ? d.score : 0;
@@ -818,6 +954,26 @@ function renderResults(r) {
     </div>`;
   });
   h += `</div><div class="divider"></div>`;
+
+  // Triage block
+  const triage = r.triage || {};
+  const strengths = Array.isArray(triage.strengths) ? triage.strengths : [];
+  const weaknesses = Array.isArray(triage.weaknesses) ? triage.weaknesses : [];
+  const missing = Array.isArray(triage.missing_sections) ? triage.missing_sections : [];
+  if (strengths.length || weaknesses.length || missing.length) {
+    h += `<div class="sec-label">Triage</div><div class="dim-grid" style="grid-template-columns:1fr 1fr 1fr;">`;
+    h += `<div class="prose-block"><h3>Strengths</h3><ul>`;
+    strengths.forEach(s => { h += `<li>${esc(s)}</li>`; });
+    h += `</ul></div>`;
+    h += `<div class="prose-block"><h3>Weaknesses</h3><ul>`;
+    weaknesses.forEach(s => { h += `<li>${esc(s)}</li>`; });
+    h += `</ul></div>`;
+    h += `<div class="prose-block"><h3>Missing Sections</h3><ul>`;
+    if (missing.length) { missing.forEach(s => { h += `<li>${esc(s)}</li>`; }); }
+    else { h += `<li style="color:var(--text3)">None identified</li>`; }
+    h += `</ul></div>`;
+    h += `</div><div class="divider"></div>`;
+  }
 
   // Per-dimension recommendations
   h += `<div class="sec-label">Per-Dimension Recommendations</div>`;
@@ -833,9 +989,9 @@ function renderResults(r) {
 
   // Priority recommendations
   h += `<div class="sec-label">Priority Recommendations</div><div class="prose-block"><ol class="priority-list">`;
-  (r.priority_recommendations || []).forEach(item => {
+  (r.priority_recommendations || []).forEach((item, i) => {
     h += `<li class="priority-item">
-      <div class="pri-num">${(r.priority_recommendations.indexOf(item) + 1)}</div>
+      <div class="pri-num">${i + 1}</div>
       <div class="pri-text"><strong>${esc(item.action)}</strong> &ndash; ${esc(item.why)}<br><span class="pri-section">${esc(item.section)}</span></div>
     </li>`;
   });
@@ -847,11 +1003,12 @@ function renderResults(r) {
   <div class="divider"></div>`;
 
   // Observed facts
-  const f = r.observed_facts || {};
   const tags = [
-    f.name_contact ? (f.name_contact.startsWith('Y') ? 'Contact present' : 'Contact absent') : null,
+    f.name_contact ? (f.name_contact.startsWith('Y') ? 'Contact \u2713' : 'Contact absent') : null,
     f.work_permit && f.work_permit !== 'N' ? 'Permit: ' + f.work_permit : 'Work permit not stated',
-    f.years_experience ? f.years_experience + ' yrs experience' : null,
+    f.headline_present === 'Y' ? 'Headline \u2713' : 'No headline',
+    f.core_competencies_present === 'Y' ? 'Keywords block \u2713' : 'No keywords block',
+    f.years_experience ? f.years_experience + ' yrs exp' : null,
     f.cv_length_pages ? f.cv_length_pages + ' page(s)' : null,
   ].filter(Boolean);
   const certs = (f.certifications || []).filter(c => c && c.toLowerCase() !== 'none');
@@ -864,9 +1021,49 @@ function renderResults(r) {
   h += `</div>`;
   if (certs.length) h += `<div class="fact-row"><strong>Certifications:</strong> ${esc(certs.join(', '))}</div>`;
   if (langs.length) h += `<div class="fact-row"><strong>Languages:</strong> ${esc(langs.join(', '))}</div>`;
+  if (f.unexplained_gaps && f.unexplained_gaps.startsWith('Y')) {
+    h += `<div class="fact-row warn-text"><strong>Unexplained gap:</strong> ${esc(f.unexplained_gaps)}</div>`;
+  }
+  if (f.footer_present === 'Y') {
+    h += `<div class="fact-row warn-text"><strong>Footer issue:</strong> name/email repeated in page footer</div>`;
+  }
   if (f.format_issues && f.format_issues.toLowerCase() !== 'none' && f.format_issues.trim() !== '') {
     h += `<div class="fact-row warn-text"><strong>Format issues:</strong> ${esc(f.format_issues)}</div>`;
   }
+  h += `</div>`;
+
+  // Diagnostics panel
+  const weightCheck = dimOrder.map(k => {
+    const d = r.scores[k] || {};
+    const expected = parseFloat(DIM_WEIGHTS[k]) / 100;
+    const returned = typeof d.weight === 'number' ? d.weight : null;
+    const match = returned !== null ? Math.abs(returned - expected) < 0.001 : null;
+    return { k, expected, returned, match };
+  });
+  const computedWS = dimOrder.reduce((sum, k) => {
+    const d = r.scores[k] || {};
+    return sum + (typeof d.score === 'number' ? d.score : 0) * (parseFloat(DIM_WEIGHTS[k]) / 100);
+  }, 0);
+  const wsDrift = Math.abs(computedWS - ws);
+
+  h += `<button class="diag-toggle" onclick="toggleDiag()">&#9660; Show diagnostics log</button>
+  <div class="diag-panel" id="diag-panel" style="display:none">`;
+  h += `<div style="font-weight:600;margin-bottom:8px;color:var(--text)">DIAGNOSTICS – cv_review_generic v${esc(SKILL_VERSION)}</div>`;
+  h += `<div class="diag-row"><span class="diag-key">Skill name in prompt</span><span class="diag-val">${esc(SKILL_NAME)}</span></div>`;
+  h += `<div class="diag-row"><span class="diag-key">Skill version in prompt</span><span class="diag-val">${esc(SKILL_VERSION)}</span></div>`;
+  h += `<div class="diag-row"><span class="diag-key">Dimensions returned by model</span><span class="diag-val">${Object.keys(r.scores || {}).length} (expected 7)</span></div>`;
+  h += `<div class="diag-row"><span class="diag-key">Reported weighted_score</span><span class="diag-val">${ws.toFixed(4)}</span></div>`;
+  h += `<div class="diag-row"><span class="diag-key">Recomputed score (from returned scores)</span><span class="${wsDrift > 0.5 ? 'diag-warn' : 'diag-ok'}">${computedWS.toFixed(4)}${wsDrift > 0.5 ? ' \u26a0 DRIFT ' + wsDrift.toFixed(2) : ' \u2713'}</span></div>`;
+  h += `<div style="margin:8px 0 4px;font-weight:600;color:var(--text)">Weight check (returned vs expected):</div>`;
+  weightCheck.forEach(({k, expected, returned, match}) => {
+    const label = DIM_LABELS[k] || k;
+    const status = match === null ? '<span class="diag-warn">not returned</span>'
+                 : match ? `<span class="diag-ok">${returned} \u2713</span>`
+                 : `<span class="diag-warn">${returned} \u26a0 expected ${expected}</span>`;
+    h += `<div class="diag-row"><span class="diag-key">${esc(label)}</span>${status}</div>`;
+  });
+  h += `<div style="margin:8px 0 4px;font-weight:600;color:var(--text)">Raw JSON from model:</div>`;
+  h += `<div style="font-size:10px;color:var(--text3);word-break:break-all">${esc(JSON.stringify(r, null, 2))}</div>`;
   h += `</div>`;
 
   // Copy button
@@ -878,17 +1075,34 @@ function renderResults(r) {
   el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function toggleDiag() {
+  const panel = document.getElementById('diag-panel');
+  const btn = panel.previousElementSibling;
+  const visible = panel.style.display !== 'none';
+  panel.style.display = visible ? 'none' : 'block';
+  btn.textContent = (visible ? '\u25bc' : '\u25b2') + (visible ? ' Show diagnostics log' : ' Hide diagnostics log');
+}
+
 function copyResults() {
   if (!lastResult) return;
   const r = lastResult;
-  const dimOrder = ['achievement_clarity', 'swiss_market_fit', 'financial_industry_signals', 'relevance_breadth', 'structure_readability', 'language_tone'];
-  let t = 'CFA CV REVIEW – GENERIC\n';
+  const dimOrder = ['achievement_clarity', 'swiss_market_fit', 'financial_industry_signals', 'positioning_identity', 'structure_readability', 'language_tone', 'document_hygiene'];
+  let t = 'CFA CV REVIEW \u2013 cv_review_generic v' + SKILL_VERSION + '\n';
   t += '='.repeat(40) + '\n\n';
   t += 'Overall Score: ' + (r.weighted_score || 0).toFixed(1) + '/100\n\n';
   t += 'DIMENSION SCORES\n';
   dimOrder.forEach(k => {
     t += DIM_LABELS[k] + ' (' + DIM_WEIGHTS[k] + '): ' + ((r.scores[k] || {}).score || 0) + '\n';
   });
+  const triage = r.triage || {};
+  if ((triage.strengths || []).length) {
+    t += '\nSTRENGTHS\n';
+    triage.strengths.forEach((s, i) => { t += (i+1) + '. ' + s + '\n'; });
+  }
+  if ((triage.weaknesses || []).length) {
+    t += '\nWEAKNESSES\n';
+    triage.weaknesses.forEach((s, i) => { t += (i+1) + '. ' + s + '\n'; });
+  }
   t += '\nPER-DIMENSION RECOMMENDATIONS\n';
   dimOrder.forEach(k => {
     const recs = (r.scores[k] || {}).recommendations || [];
@@ -898,7 +1112,7 @@ function copyResults() {
   });
   t += '\nPRIORITY RECOMMENDATIONS\n';
   (r.priority_recommendations || []).forEach((p, i) => {
-    t += (i + 1) + '. ' + p.action + ' – ' + p.why + ' (' + p.section + ')\n';
+    t += (i + 1) + '. ' + p.action + ' \u2013 ' + p.why + ' (' + p.section + ')\n';
   });
   t += '\nSUMMARY\n' + (r.summary || '') + '\n';
 
@@ -910,5 +1124,6 @@ function copyResults() {
 </script>
 </body>
 </html>
+
 
 
