@@ -1067,8 +1067,8 @@ function renderResults(r) {
   const tags = [
     f.name_contact ? (f.name_contact.startsWith('Y') ? 'Contact \u2713' : 'Contact absent') : null,
     f.work_permit && f.work_permit !== 'N' ? 'Permit: ' + f.work_permit : 'Work permit not stated',
-    f.headline_present === 'Y' ? 'Headline \u2713' : 'No headline',
-    f.core_competencies_present === 'Y' ? 'Keywords block \u2713' : 'No keywords block',
+    f.headline_present && f.headline_present.startsWith('Y') ? 'Headline \u2713' : 'No headline',
+    f.core_competencies_present && f.core_competencies_present.startsWith('Y') ? 'Keywords block \u2713' : 'No keywords block',
     f.years_experience ? f.years_experience + ' yrs exp' : null,
     f.cv_length_pages ? f.cv_length_pages + ' page(s)' : null,
   ].filter(Boolean);
@@ -1184,6 +1184,7 @@ function copyResults() {
 </script>
 </body>
 </html>
+
 
 
 
