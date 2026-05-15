@@ -581,18 +581,20 @@ DIMENSION 1 – Achievement Clarity and Evidence — weight 0.25
 
 Score additively. Start at 0.
 
-BASE SCORE — award points only if the evidence is explicitly present:
-+10 pts: each role in the last 10 years has at least one bullet (not a paragraph). Max across all roles: 20 pts.
-+30 pts: majority of those bullets include a specific measurable figure (%, headcount, USD/CHF amount, time saved, users served). "Majority" = more than half of all bullets across the last 10 years.
-+20 pts: at least one bullet in the most recent role meets ALL FOUR Karol elements: (a) candidate's specific contribution, (b) financial figure or measurable outcome in CHF or USD, (c) business context or reason for action, (d) impact on the firm or stakeholders.
-+20 pts: business context present in the majority of bullets (why the work was done, not just what was done).
+BASE SCORE — count explicitly, do not estimate:
++10 pts: every role in the last 10 years has at least one structured bullet point (a line beginning with a dash, bullet symbol, or bold label). If even one role in the last 10 years has only paragraphs and no bullets, do not award these points. Max 10 pts.
++10 pts: at least 2 roles in the last 10 years have structured bullets. Max 10 pts (combined with above = 20 pts max for bullet structure).
++30 pts: count all structured bullets across roles in the last 10 years. If 50% or more of those bullets contain at least one specific numeric figure (%, number, USD/CHF amount, named timeframe), award +30 pts. If 25–49% contain a numeric figure, award +15 pts. If fewer than 25% contain a numeric figure, award 0 pts.
++20 pts: at least one bullet in the most recent role meets ALL FOUR Karol elements simultaneously in a single bullet: (a) the candidate's specific named action or decision, (b) a financial figure or measurable outcome expressed as a number, (c) an explicit reason or business context for the action, (d) a named impact on the firm, client, or stakeholders. All four must be present in one bullet — partial credit is not awarded.
++20 pts: at least 3 bullets across the last 10 years include an explicit reason clause — a phrase explaining WHY the work was done (e.g. "to enable...", "following the merger...", "in response to..."). Generic role descriptions without a reason clause do not qualify.
 
 HARD DEDUCTIONS — apply each that is present, no discretion:
--15 pts: any vague outcome statement without a figure: "material cost reduction", "significant efficiency gain", "strong business impact", "improved processes", "streamlined workflows" — deduct once per occurrence, max -30 pts total.
--10 pts: large financial figure attributed to a team or firm without stating the candidate's specific role or contribution (e.g. "600+ users served" or "USD 100M+ portfolios" without stating what the candidate personally built, decided, or owned).
--10 pts: fund or portfolio performance figure (e.g. "300%+ annual performance") without specifying the candidate's individual contribution vs. team vs. market.
--15 pts: most recent role described primarily in narrative paragraphs rather than structured bullets. Narrative paragraphs that list responsibilities are duty statements, not achievements.
--10 pts per filler phrase: "responsible for", "strong leadership", "excellent communication skills", "deep understanding of", "results-oriented" — each occurrence reduces score.
+-15 pts: "material cost reduction" without a CHF or USD figure in the same sentence. Apply once.
+-15 pts: "superior product performance" or "significant efficiency gain" or "improved processes" or "streamlined workflows" without a numeric figure. Apply once per distinct phrase, max –30 pts total for this category.
+-10 pts: a financial figure (USD, CHF, AUM, portfolio size) is stated but attributed to a team, firm, or product rather than to the candidate's own action or decision. Apply once per such figure, max –20 pts total.
+-10 pts: "300%+ fund performance" or similar fund/portfolio return figure without a sentence specifying the candidate's individual role in generating that return. Apply once.
+-15 pts: the most recent role opens with one or more narrative paragraphs before any bullets. These paragraphs describe responsibilities, not achievements, and reduce the quality signal of the bullets that follow.
+-10 pts per distinct filler phrase found anywhere in the document: "responsible for", "strong leadership", "excellent communication skills", "deep understanding of", "results-oriented". Count each phrase once regardless of how many times it appears. Max –30 pts for this category.
 
 SENIORITY CEILING — mandatory, enforced by gate computed in Step 1:
 If director_level_financial_figure = N: cap D1 at 60. Do not exceed this regardless of base score or deductions.
@@ -662,14 +664,24 @@ DIMENSION 6 – Language and Tone — weight 0.05
 
 Score additively. Start at 0.
 
-+25 pts: all achievement bullets open with a strong action verb (Led, Built, Designed, Delivered, Reduced, Increased, etc.) — deduct proportionally if fewer than 75% of bullets comply
-+25 pts: no first-person pronouns (I, my, we, our) anywhere in the document
-+25 pts: no grammar or spelling errors detectable from the text
-+25 pts: no "References available upon request" present
++25 pts: 75% or more of all structured bullets in the document open with a strong action verb (Led, Built, Designed, Delivered, Reduced, Increased, Managed, Developed, Architected, Drove, Implemented, Created, Launched). Count bullets and compute the percentage — do not estimate.
++25 pts: no first-person pronouns (I, my, we, our) found anywhere in the document. Binary — present anywhere = 0 pts.
++25 pts: no grammar or spelling errors detectable from the extracted text. Binary.
++25 pts: the phrase "References available upon request" or "References on request" is absent. Binary.
 
-HARD DEDUCTIONS — apply each occurrence, no cap:
--10 pts per filler phrase: "proven track record", "strong foundation in", "results-oriented", "passionate about", "dynamic professional", "deep understanding of", "strong track record of delivering" — deduct for each distinct occurrence in the document.
--5 pts: "Design and photo experience" or similarly vague personal interest listed without relevance to the role.
+HARD DEDUCTIONS — count each DISTINCT phrase once per document regardless of how many times it appears. Do not count the same phrase twice.
+List of penalised phrases and their deductions:
+- "proven track record": –10 pts (count once even if it appears 3 times)
+- "strong foundation in": –10 pts (count once)
+- "results-oriented": –10 pts (count once)
+- "passionate about": –10 pts (count once)
+- "dynamic professional": –10 pts (count once)
+- "deep understanding of": –10 pts (count once)
+- "strong track record of delivering": –10 pts (count once)
+
+HARD CAP on filler deductions: maximum total deduction from filler phrases is –30 pts. If three or more phrases are present, still deduct only –30 pts total.
+
+-5 pts: "Design and photo experience" or a similarly vague personal interest listed in Additional Information without any stated relevance to a financial services role. Apply once.
 
 DIMENSION 7 – Document Hygiene and Modern Formatting — weight 0.10
 
