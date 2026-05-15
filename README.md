@@ -1,5 +1,7 @@
 # CFA Society Switzerland – CV Review AI Agent
 
+https://amarows.github.io/cfa_skills/cfa_cv_review.html
+
 An AI-assisted CV review service for the CFA Society Switzerland Careers Committee.
 
 ## What This Is
