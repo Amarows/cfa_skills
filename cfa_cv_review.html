@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CFA CV Review – Generic</title>
+<title>CFA CV Review – v0.2</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -117,17 +117,11 @@
     background: var(--bg2);
     border: 0.5px solid var(--border);
     border-radius: var(--radius);
-    padding: 1.25rem;
-    margin-bottom: 1.5rem;
+    padding: 0.6rem 0.75rem;
+    margin-bottom: 1rem;
   }
-  .api-section-title {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--text3);
-    margin-bottom: 10px;
-  }
+  .api-section-title { display: none; }
+  .api-note { display: none; }
   .api-row {
     display: flex;
     gap: 8px;
@@ -168,7 +162,7 @@
   .upload-zone {
     border: 1.5px dashed var(--border2);
     border-radius: var(--radius);
-    padding: 2.5rem 1.5rem;
+    padding: 1.75rem 1.25rem;
     text-align: center;
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s;
@@ -179,9 +173,9 @@
   .upload-zone.drag { background: var(--bg2); border-color: var(--text2); }
   .upload-zone.has-file { border-style: solid; border-color: var(--green); background: var(--green-bg); }
   #file-input { display: none; }
-  .upload-icon { font-size: 30px; margin-bottom: 10px; }
-  .upload-label { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
-  .upload-sub { font-size: 12px; color: var(--text2); }
+  .upload-icon { font-size: 24px; margin-bottom: 7px; }
+  .upload-label { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+  .upload-sub { font-size: 11px; color: var(--text2); }
   .upload-fname { font-size: 13px; font-weight: 500; color: var(--green); margin-top: 8px; }
 
   /* Form fields */
@@ -454,7 +448,7 @@
   <header class="site-header">
     <div class="logo-block">
       <div class="logo-badge">CFA Society Switzerland &middot; Careers Committee</div>
-      <h1 class="site-title">CV Review &ndash; Generic</h1>
+      <h1 class="site-title">CV Review &ndash; v0.2</h1>
       <p class="site-sub">Six-dimension analysis calibrated to Swiss financial industry norms</p>
     </div>
     <div style="text-align:right;margin-top:4px;">
@@ -916,4 +910,5 @@ function copyResults() {
 </script>
 </body>
 </html>
+
 
