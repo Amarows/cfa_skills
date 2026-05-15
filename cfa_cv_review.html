@@ -596,7 +596,7 @@ HARD DEDUCTIONS — apply each that is present, no discretion:
 -15 pts: "superior product performance" or "significant efficiency gain" or "improved processes" or "streamlined workflows" without a numeric figure. Apply once per distinct phrase, max –30 pts total for this category.
 -10 pts: a financial figure (USD, CHF, AUM, portfolio size) is stated but attributed to a team, firm, or product rather than to the candidate's own action or decision. Apply once per such figure, max –20 pts total.
 -10 pts: "300%+ fund performance" or similar fund/portfolio return figure without a sentence specifying the candidate's individual role in generating that return. Apply once.
--15 pts: the most recent role opens with one or more narrative paragraphs before any bullets. These paragraphs describe responsibilities, not achievements, and reduce the quality signal of the bullets that follow.
+-15 pts: the most recent role opens with TWO OR MORE sentences of narrative prose before any structured bullets. A single short sentence of role context (one line, under 30 words) does not trigger this deduction. The deduction applies when the opening block is a full paragraph or more that describes responsibilities, scope, or background rather than leading directly into achievement bullets.
 -10 pts per distinct filler phrase found anywhere in the document: "responsible for", "strong leadership", "excellent communication skills", "deep understanding of", "results-oriented". Count each phrase once regardless of how many times it appears. Max –30 pts for this category.
 
 SENIORITY CEILING — mandatory, enforced by gate computed in Step 1:
@@ -625,9 +625,11 @@ DIMENSION 3 – Financial Industry Signals — weight 0.15
 Score additively. Start at 0.
 
 +25 pts: relevant certifications (CFA, FRM, CAIA, CIIA, AZEK, PRM) present AND prominently placed. Prominent placement includes: (a) appended directly to the candidate's name in the header (e.g. "Alexey Malashonak, CFA, FRM") — this is the most prominent possible placement and always qualifies for full points; (b) a dedicated Certifications section appearing before or immediately after the contact block. Award +15 pts only if certifications are present solely in the Education section with no mention elsewhere.
-+25 pts: financial products, asset classes, or regulatory frameworks named in the experience body (Basel II/III/IV, IFRS, ISDA, CVA/DVA, PFE, FINMA, GRI, Swiss GAAP FER, PD/LGD/EAD, CCR, GIPS). Award only if named in the context of actual work performed, not just listed in a skills table.
-+15 pts: at least one of the following platforms or tools is named in the experience body (not only in a skills table) in the context of actual work performed: Bloomberg, Murex, Calypso, FactSet, RiskMetrics, Refinitiv, Eikon, MicroStrategy, SAS, Databricks, Power BI, Temenos, Finastra, MSCI, Axioma, Sophis, Numerix, OpenPages, Riskonnect, FIS, Finastra, Misys, SimCorp, Charles River, Aladdin, Markit, IHS Markit, MSCI Barra, Quantifi, Openlink, Allegro. Award 0 pts if the tool appears only in a skills/tools table without a work context sentence.
-+10 pts: a dedicated section named Skills, Technical Skills, Technological Expertise, Tools, Competencies, or similar is present AND contains 5 or more distinct named items. Award 0 pts if the section is absent or has fewer than 5 items.
+DEFINITION — "experience body": a sentence or bullet point inside a dated work role section (under a company name and date range). A dedicated Skills, Technological Expertise, Technical Skills, Tools, or Competencies section is NOT experience body — it is a skills table. Frameworks or platforms mentioned only in a skills table do not qualify for D3 points, regardless of how many items the table contains.
+
++25 pts: financial products, asset classes, or regulatory frameworks named in the experience body (Basel II/III/IV, IFRS, ISDA, CVA/DVA, PFE, FINMA, GRI, Swiss GAAP FER, PD/LGD/EAD, CCR, GIPS). To qualify: the framework must appear inside a dated role section, in a sentence describing actual work performed. A framework listed only in the Skills or Technological Expertise section does not qualify.
++15 pts: at least one of the following platforms or tools is named inside a dated role section in a sentence describing actual work performed: Bloomberg, Murex, Calypso, FactSet, RiskMetrics, Refinitiv, Eikon, MicroStrategy, SAS, Databricks, Power BI, Temenos, Finastra, MSCI, Axioma, Sophis, Numerix, OpenPages, Riskonnect, FIS, Misys, SimCorp, Charles River, Aladdin, Markit, IHS Markit, MSCI Barra, Quantifi, Openlink, Allegro. A tool appearing only in the Skills or Technological Expertise section does NOT qualify — award 0 pts for this criterion if no qualifying tool appears in a dated role section.
++10 pts: a dedicated section named Skills, Technical Skills, Technological Expertise, Tools, Competencies, or similar is present AND contains 5 or more distinct named items. This is the only criterion that credits the skills table directly.
 
 HARD DEDUCTIONS (D3):
 -0 pts: no additional deduction beyond the +15 vs +25 distinction above. Do not deduct separately for placement.
@@ -1253,6 +1255,7 @@ function copyResults() {
 </script>
 </body>
 </html>
+
 
 
 
