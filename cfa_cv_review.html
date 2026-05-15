@@ -907,9 +907,15 @@ function esc(s) {
 
 function renderResults(r) {
   lastResult = r;
-  const ws = typeof r.weighted_score === 'number' ? r.weighted_score : 0;
-  const [vLabel, vColor] = verdict(ws);
   const dimOrder = ['achievement_clarity', 'swiss_market_fit', 'financial_industry_signals', 'positioning_identity', 'structure_readability', 'language_tone', 'document_hygiene'];
+  // Always display the locally recomputed score; model arithmetic is not trusted
+  const wsModel = typeof r.weighted_score === 'number' ? r.weighted_score : 0;
+  const ws = dimOrder.reduce((sum, k) => {
+    const d = r.scores[k] || {};
+    return sum + (typeof d.score === 'number' ? d.score : 0) * (parseFloat(DIM_WEIGHTS[k]) / 100);
+  }, 0);
+  const wsDrift = Math.abs(ws - wsModel);
+  const [vLabel, vColor] = verdict(ws);
 
   let h = '';
 
@@ -1040,11 +1046,6 @@ function renderResults(r) {
     const match = returned !== null ? Math.abs(returned - expected) < 0.001 : null;
     return { k, expected, returned, match };
   });
-  const computedWS = dimOrder.reduce((sum, k) => {
-    const d = r.scores[k] || {};
-    return sum + (typeof d.score === 'number' ? d.score : 0) * (parseFloat(DIM_WEIGHTS[k]) / 100);
-  }, 0);
-  const wsDrift = Math.abs(computedWS - ws);
 
   h += `<button class="diag-toggle" onclick="toggleDiag()">&#9660; Show diagnostics log</button>
   <div class="diag-panel" id="diag-panel" style="display:none">`;
@@ -1052,8 +1053,8 @@ function renderResults(r) {
   h += `<div class="diag-row"><span class="diag-key">Skill name in prompt</span><span class="diag-val">${esc(SKILL_NAME)}</span></div>`;
   h += `<div class="diag-row"><span class="diag-key">Skill version in prompt</span><span class="diag-val">${esc(SKILL_VERSION)}</span></div>`;
   h += `<div class="diag-row"><span class="diag-key">Dimensions returned by model</span><span class="diag-val">${Object.keys(r.scores || {}).length} (expected 7)</span></div>`;
-  h += `<div class="diag-row"><span class="diag-key">Reported weighted_score</span><span class="diag-val">${ws.toFixed(4)}</span></div>`;
-  h += `<div class="diag-row"><span class="diag-key">Recomputed score (from returned scores)</span><span class="${wsDrift > 0.5 ? 'diag-warn' : 'diag-ok'}">${computedWS.toFixed(4)}${wsDrift > 0.5 ? ' \u26a0 DRIFT ' + wsDrift.toFixed(2) : ' \u2713'}</span></div>`;
+  h += `<div class="diag-row"><span class="diag-key">Model reported weighted_score</span><span class="diag-val">${wsModel.toFixed(4)}</span></div>`;
+  h += `<div class="diag-row"><span class="diag-key">Displayed score (recomputed locally)</span><span class="${wsDrift > 0.5 ? 'diag-warn' : 'diag-ok'}">${ws.toFixed(4)}${wsDrift > 0.5 ? ' \u26a0 drift ' + wsDrift.toFixed(4) + ' pts from model' : ' \u2713 matches model'}</span></div>`;
   h += `<div style="margin:8px 0 4px;font-weight:600;color:var(--text)">Weight check (returned vs expected):</div>`;
   weightCheck.forEach(({k, expected, returned, match}) => {
     const label = DIM_LABELS[k] || k;
@@ -1087,9 +1088,13 @@ function copyResults() {
   if (!lastResult) return;
   const r = lastResult;
   const dimOrder = ['achievement_clarity', 'swiss_market_fit', 'financial_industry_signals', 'positioning_identity', 'structure_readability', 'language_tone', 'document_hygiene'];
+  const wsComputed = dimOrder.reduce((sum, k) => {
+    const d = r.scores[k] || {};
+    return sum + (typeof d.score === 'number' ? d.score : 0) * (parseFloat(DIM_WEIGHTS[k]) / 100);
+  }, 0);
   let t = 'CFA CV REVIEW \u2013 cv_review_generic v' + SKILL_VERSION + '\n';
   t += '='.repeat(40) + '\n\n';
-  t += 'Overall Score: ' + (r.weighted_score || 0).toFixed(1) + '/100\n\n';
+  t += 'Overall Score: ' + wsComputed.toFixed(1) + '/100\n\n';
   t += 'DIMENSION SCORES\n';
   dimOrder.forEach(k => {
     t += DIM_LABELS[k] + ' (' + DIM_WEIGHTS[k] + '): ' + ((r.scores[k] || {}).score || 0) + '\n';
@@ -1124,6 +1129,7 @@ function copyResults() {
 </script>
 </body>
 </html>
+
 
 
 
