@@ -515,8 +515,8 @@
   <!-- Optional fields -->
   <div class="fields-row">
     <div class="field">
-      <label>Client&rsquo;s stated goal (optional)</label>
-      <input type="text" id="client-goal" placeholder="e.g., exploring risk or quant roles">
+      <label style="opacity:0.45;">Client&rsquo;s stated goal <span style="font-size:10px;font-weight:500;color:var(--amber);background:var(--amber-bg,#fff8e6);border:0.5px solid var(--amber);border-radius:3px;padding:1px 5px;margin-left:4px;">Under development</span></label>
+      <input type="text" id="client-goal" placeholder="Under development" disabled style="opacity:0.4;cursor:not-allowed;">
     </div>
     <div class="field">
       <label>Seniority level (optional)</label>
@@ -566,7 +566,7 @@ Extract ALL of the following:
 - headline_present: role-specific headline at top of CV (Y/N). DETECTION RULE: a headline is any short line (typically 3–8 words) that names a role type and appears between the contact block and the summary paragraph. It may be all-caps, bold, or centred. Examples: "AI PRODUCT LEADER & TECHNICAL STRATEGIST", "Senior Risk Manager", "Quantitative Analyst | Asset Management". Do NOT require a section label — detect by position and content.
 - core_competencies_present: dedicated keywords/skills block present before the Experience section (Y/N). DETECTION RULE: this is typically a single bold line or short paragraph of role-specific terms separated by bullets (•) or pipes (|), appearing between the summary and the Experience section. It does not need to be labelled "Core Competencies" — detect by structure and position.
 - unexplained_gaps: any employment gaps > 6 months not explained (Y/N, note period)
-- director_level_financial_figure: scan the most recent role only. Does it contain at least one explicit CHF or USD amount representing cost saved, revenue generated, budget managed, or P&L impact? User counts, adoption percentages, efficiency ratios, and team size figures do NOT qualify. Answer Y or N and quote the exact phrase if Y. Example of qualifying: "saved CHF 2M", "managed USD 50M budget", "generated CHF 1.2M revenue". Example of non-qualifying: "600+ users", "95% adoption", "material cost reduction", "USD 100M+ portfolios" (team figure, not candidate's own financial contribution).
+- director_level_financial_figure: scan the most recent role only. Does it contain at least one explicit CHF or USD amount representing cost saved, revenue generated, budget managed, or P&L impact? User counts, adoption percentages, efficiency ratios, and team size figures do NOT qualify. Answer Y or N and quote the exact phrase if Y. Example of qualifying: "saved CHF 2M", "managed USD 50M budget", "generated CHF 1.2M revenue". Example of non-qualifying: "600+ users", "95% adoption", "material cost reduction", "USD 100M+ portfolios" (team figure, not candidate's own financial contribution). CRITICAL: "material cost reduction", "material cost impact", "significant cost savings", "cost efficiencies achieved" are ALL non-qualifying — they are vague phrases without a number. If the only financial language in the most recent role is one of these phrases, the answer is N.
 - format_issues: mixed fonts, text boxes, shaded backgrounds, double section separators (describe or "none")
 
 ANTI-HALLUCINATION GATE: Do not proceed to Step 2 if CV text was not fully readable. State the gap and stop.
@@ -616,9 +616,9 @@ Score additively. Start at 0. Award exactly the points stated — no partial cre
 +20 pts: location in Switzerland stated in contact details
 +20 pts: date of birth AND nationality BOTH absent from the document
 
-HARD DEDUCTIONS:
--10 pts: QR code or private cloud link present (cybersecurity signal — Swiss financial employers will notice)
--10 pts: date of birth OR nationality present (each, not both — deduct for each one present)
+HARD DEDUCTIONS (D2):
+-10 pts: QR code or private cloud link present (cybersecurity signal). This is the ONLY deduction applied in D2 for this issue — maximum -10 pts regardless of severity. Do not apply any additional undocumented deductions. The private cloud link is already penalised fully in D7; D2 applies only this single -10 pt adjustment.
+-10 pts: date of birth OR nationality present (deduct -10 for each one present, independently).
 
 DIMENSION 3 – Financial Industry Signals — weight 0.15
 
