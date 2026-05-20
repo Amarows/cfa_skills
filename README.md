@@ -8,6 +8,9 @@ An AI-assisted CV review service for the CFA Society Switzerland Careers Committ
 
 The Committee helps members and candidates find employment in the Swiss financial market. This project systematizes that process into a repeatable, AI-assisted workflow – reducing manual effort for Committee members while improving consistency and quality of feedback for Clients.
 
+<img width="917" height="1731" alt="image" src="https://github.com/user-attachments/assets/4598f701-00ad-4803-b632-8cefff0376c4" />
+
+
 ## Repository Structure
 
 ```
