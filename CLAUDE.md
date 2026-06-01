@@ -26,12 +26,20 @@ Phase 1 – Committee internal use. A Committee member uploads a CV, the tool sc
 cfa_skills/
 ├── CLAUDE.md                          ← this file
 ├── README.md
+├── .gitignore                         ← excludes cv_samples/ (PII) and .idea/
 ├── cfa_cv_review.html                 ← main application (single-page HTML, v0.2.0)
+├── cv_samples/                        ← LOCAL ONLY (gitignored): paired real CVs + expert feedback
+│   ├── CV_1.pdf  +  CV_1_feedback.docx
+│   └── CV_2.pdf  +  CV_2_feedback.docx
 └── skills/
     ├── cv_review_generic/
     │   └── SKILL.md                   ← 7-dimension generic CV scoring rubric (v0.2.0)
-    └── cv_target_role_score/
-        └── SKILL.md                   ← role-fit extension (v0.1.0)
+    ├── cv_target_role_score/
+    │   └── SKILL.md                   ← role-fit extension (v0.1.0)
+    ├── cv_calibration_eval/           ← diff AI review vs expert feedback, read-only (v0.1.0)
+    │   └── SKILL.md
+    └── cv_rubric_refine/              ← batch rubric refinement from samples, human-gated (v0.1.0)
+        └── SKILL.md
 ```
 
 ### Key File: cfa_cv_review.html
@@ -155,7 +163,54 @@ Pre-warm call: fire a minimal dummy request with the cached system prompt on for
 
 ---
 
-## 7. Active Workstreams
+## 7. CV Learning Loop (Continuous Calibration)
+
+The mechanism for turning accumulating CV samples into rubric improvements **without score drift**. This is core architecture, not a one-off task.
+
+### Data
+
+`cv_samples/` (local only, gitignored — PII). Each sample is a **paired ground-truth example**: `CV_N.pdf` (input) + `CV_N_feedback.docx` (expert human review = Karol's judgment). New samples are dropped into this folder over time. They serve a dual role — *training signal* (mine for heuristics) and *evaluation signal* (benchmark the tool against the human). Use requires client consent.
+
+### Two-Skill Architecture
+
+Deliberately split so that cheap/frequent evaluation never touches the rubric, and rubric changes stay rare and gated.
+
+| Skill | Mode | Role |
+|---|---|---|
+| `cv_calibration_eval` | Read-only, run anytime | Run the current rubric on a CV, diff AI output against the expert feedback, emit a **discrepancy report** (score gaps, missed flags, tone mismatches). Never modifies SKILL.md. Delivers the consistency metric directly. |
+| `cv_rubric_refine` | Deliberate, batch, human-gated | Read *accumulated* discrepancy reports, find *recurring* patterns, propose **specific SKILL.md diffs** with provenance + confidence tags. Outputs a proposed diff for human approval — **never auto-commits**. |
+
+**Discrepancy report, two renderings:** a structured/diff version for the operator (Alex) and a plain-prose version for Karol to react to without reading JSON. Karol's reactions feed the refinement decision.
+
+**Cold-start trigger:** `cv_rubric_refine` runs for the first time once **5–6 CVs** have accumulated — not per-CV. This lets precedents build before any generalization.
+
+### Anti-Drift Controls
+
+The calibration history (§3) is a record of score inflation from rubric changes. These controls prevent silent drift:
+
+1. **Golden-snapshot regression harness.** Baseline = current scores + key flags for the calibration set, stored as a snapshot (**local/gitignored — derived from PII**). On *any* rubric change, re-run the set and diff against the snapshot. Adjudicate every moved score: *intended* → accept and re-baseline; *unintended* → fix the rubric before shipping. The goal is not identical scores but **"only intended changes, every unintended change detected."**
+2. **Noise floor.** LLMs are non-deterministic even at temperature 0. Before trusting any diff, score one CV 3–5× unchanged to measure variance. Diffs inside that band are noise; only larger moves count.
+3. **Pinned model.** `claude-sonnet-4-20250514`. A model upgrade shifts all scores — treat it as a deliberate, full re-baseline event, never an accident.
+
+### Cold-Start vs. Mature Mode
+
+The discipline for incorporating knowledge changes with corpus size N:
+
+| | Cold start (N small — current) | Mature (N >~10) |
+|---|---|---|
+| Mental model | Case law — each CV is a precedent; every observation counts | Statistics — require corroboration before generalizing |
+| New-rule scope | Narrow conditionals only; no sweeping rules | Generalize once a pattern recurs |
+| Corroboration | Single-source rules allowed | Require ≥2 supporting examples |
+| Provenance | Every rule tagged `source: CV_N, confidence: low/med/high` | Confidence promoted/demoted as evidence accumulates |
+| Held-out set | None — all 5–6 CVs used as calibration (accepted tradeoff) | Carve out a held-out eval set never seen by refinement |
+
+### Human Gate
+
+Conflicts between new knowledge and the existing rubric are **never auto-resolved**. Alex reviews and decides; Karol sees the prose discrepancy report for domain input. This is the Human-in-the-loop principle (§4) applied to the rubric itself.
+
+---
+
+## 8. Active Workstreams
 
 | Workstream | Status | Next Action |
 |---|---|---|
@@ -165,10 +220,11 @@ Pre-warm call: fire a minimal dummy request with the cached system prompt on for
 | CFO skill mapping appendix | Under discussion | Email drafted to Karol; awaiting response |
 | German-language CV support | Backlog | Phase 2 scope; requires Committee capacity to validate output |
 | LinkedIn promotion post | Pending | Alex prefers short, factual content; self-promotion noted as personally uncomfortable |
+| CV learning loop (§7) | In progress | Skills built (`cv_calibration_eval`, `cv_rubric_refine` v0.1.0). Next: run first evals on accumulated CVs; first refinement pass at 5–6 CVs |
 
 ---
 
-## 8. Open Questions
+## 9. Open Questions
 
 1. Should the tool cover all Swiss financial roles, or prioritize buy-side / sell-side / risk / quant profiles where Committee expertise is strongest?
 2. When should German-language support be added? What is the Committee's capacity to validate output?
@@ -178,7 +234,7 @@ Pre-warm call: fire a minimal dummy request with the cached system prompt on for
 
 ---
 
-## 9. Versioning Convention
+## 10. Versioning Convention
 
 Files follow semantic versioning: `MAJOR.MINOR.PATCH`
 
@@ -190,7 +246,7 @@ Version is declared in the YAML front matter of each SKILL.md and in the HTML `<
 
 ---
 
-## 10. Path to Phase 2 (Client-Facing)
+## 11. Path to Phase 2 (Client-Facing)
 
 Phase 2 gate criteria (from Phase 1):
 - At least 10 reviews completed with Committee approval
