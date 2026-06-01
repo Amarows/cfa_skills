@@ -1,207 +1,206 @@
-# CFA Society Switzerland – CV Review AI Agent
+# CFA Society Switzerland – CV Review Tool
+## CLAUDE.md – Project Knowledge Base for Claude Code
 
-## Project Overview
-
-This project builds an AI-assisted CV review service for the CFA Society Switzerland Careers Committee ("the Committee"). The Committee helps members and candidates ("Clients") improve their CVs to find employment in the Swiss financial market.
-
-**Background:** The review process was previously conducted manually by one Committee member. The goal is to systematize, scale, and eventually automate that accumulated knowledge into a repeatable, high-quality AI-assisted workflow.
-
----
-
-## Step 1 – Targets, Values, and Constraints
-
-### Ultimate Target
-
-> Help Clients increase the probability of securing a job interview in the Swiss financial industry by improving the quality, relevance, and positioning of their CV.
-
-### Success Metrics
-
-| Metric | Description | Target |
-|---|---|---|
-| Review throughput | CVs reviewed per month by Committee members using the tool | Baseline TBD after pilot |
-| Time-to-review | Committee member time spent per CV with AI assistance | < 20 min (vs. estimated 60–90 min manual) |
-| Client satisfaction | Post-review survey score (1–5 scale) | >= 4.0 |
-| Interview conversion rate | % of Clients who report getting interviews within 90 days | Longitudinal; establish baseline in Year 1 |
-| Consistency score | Inter-rater agreement across two independent AI reviews of the same CV | >= 0.80 (Cohen's kappa or equivalent) |
-
-### Core Values
-
-1. **Specificity** – Advice is grounded in Swiss financial market norms and financial industry hiring practices, not generic career coaching.
-2. **Honesty** – Feedback is constructive but frank; the tool must not inflate assessments to please Clients.
-3. **Anti-hallucination discipline** – All review claims must be traceable to observable facts in the CV or to documented review criteria. The tool must not invent achievements or infer facts not present in the submitted document.
-4. **Human-in-the-loop (Phase 1)** – In the initial phase, a Committee member reviews and approves all AI output before it reaches the Client.
-5. **Consistency** – The same CV reviewed twice must produce substantially the same output.
-6. **Privacy** – Client CVs contain personal data (PII). Data handling must comply with Swiss data protection law (nDSG) and, where applicable, GDPR.
-
-### Constraints
-
-- **Scope:** Swiss financial industry only (banking, asset management, insurance, fintech). Do not provide generic career advice applicable to other industries or markets.
-- **Language:** Initial version in English. German-language CVs are in scope for a later phase.
-- **Output ownership:** The AI produces a draft review. The Committee member owns and is accountable for the final output sent to the Client.
-- **No fabrication:** The tool must not suggest adding experience or achievements the Client has not documented.
-- **No legal advice:** The tool must not comment on work permit eligibility, visa requirements, or employment law.
+> **Last updated:** 2026-06  
+> **Current release:** v0.2.0  
+> **Repo:** https://github.com/Amarows/cfa_skills  
+> **Local path:** C:\Users\alexe_ne2qg0j\OneDrive\Files\Programming\Python\cfa_skills
 
 ---
 
-## Step 2 – Review Guidelines and Quality Controls
+## 1. Project Context
 
-### Review Dimensions
+### Who Owns This
 
-The CV review skill will evaluate the following dimensions. Each dimension receives a score and actionable comments.
+**Alex Malashonak** (Product Owner, AI architect) and **Karol Brodzinski** (domain expert, Careers Committee) are building an AI-powered CV review tool for the **CFA Society Switzerland Careers Committee**. The Committee provides a free CV review service to CFA members and candidates seeking employment in the Swiss financial industry. Previously this was entirely manual; the goal is to encode Karol's expertise into a consistent, scalable AI-assisted workflow.
 
-| # | Dimension | Weight | Description |
-|---|---|---|---|
-| 1 | Relevance to Target Role | 25% | How well does the CV match the role type the Client is targeting? |
-| 2 | Achievement Clarity | 20% | Are accomplishments quantified? Are outcomes stated, not just duties? |
-| 3 | Swiss Market Fit | 20% | Does the CV address Swiss-specific signals: language skills, work permit, location, format norms? |
-| 4 | Financial Industry Signals | 15% | Are relevant certifications (CFA, FRM, CAIA, etc.), products, and regulatory frameworks surfaced prominently? |
-| 5 | Structure and Readability | 10% | Logical flow, length (typically 1–2 pages for most roles), formatting consistency. |
-| 6 | Language and Tone | 10% | Professional, precise, no grammar errors. Action-verb openings. No passive voice in achievement statements. |
+### Current Phase
 
-**Overall Score:** Weighted average of the six dimensions, expressed as a percentage.
-
-### Swiss Financial Market – Key Review Criteria
-
-The following are known differentiators for Swiss financial industry CVs:
-
-- **Work permit status** must be stated explicitly (EU/EFTA citizen, C permit, B permit, etc.). Omitting this creates friction for HR.
-- **Language skills** must be listed with proficiency levels (e.g., B2, C1, native). German is a strong positive signal for Swiss roles; French for Geneva/Lausanne.
-- **Certifications** (CFA, FRM, CAIA, PRM, CIIA, AZEK) should appear near the top of the document, not buried in an education section.
-- **Quantified achievements** are expected at the senior level. Vague statements ("improved processes") are penalized.
-- **Photo:** Optional and declining in prevalence; not penalized if absent.
-- **Date of birth / nationality:** No longer required in Switzerland; advise removal if present to reduce bias risk.
-- **References:** "Available upon request" is redundant; advise removal.
-- **CV length:** For professionals with 5–15 years of experience, two pages is the norm. Senior/Director-level may extend to three.
-- **ATS compatibility:** Plain formatting is preferred. Avoid text boxes, tables for layout, graphics, and headers/footers for critical information.
-
-### Quality Controls
-
-- **Source citation:** Every recommendation must reference the specific section or line of the CV it relates to. Generic comments are rejected.
-- **Positive framing:** All feedback must include both what is done well and what needs improvement. Pure negative output is not permitted.
-- **Grounding check:** Before generating recommendations, the skill must confirm it has read the full CV text. No recommendations on content not visible in the input.
-- **Consistency check (optional in Phase 1):** For calibration, randomly re-run 10% of reviews and compare scores. Flag discrepancies > 10 percentage points.
-- **Committee member review gate:** The tool produces a draft. A Committee member must approve before delivery to Client.
+Phase 1 – Committee internal use. A Committee member uploads a CV, the tool scores it, and the member reviews the AI output before sending it to the client. No client-facing access yet.
 
 ---
 
-## Step 3 – Architecture
-
-### Component Overview
+## 2. Repository Structure
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Committee Member UI                   │
-│          (Claude.ai Project or custom interface)         │
-└───────────────────────┬─────────────────────────────────┘
-                        │
-              ┌─────────▼──────────┐
-              │   cv-review skill  │  ← Primary skill (to be built)
-              │   (SKILL.md)       │
-              └─────────┬──────────┘
-                        │
-          ┌─────────────┼──────────────┐
-          │             │              │
-  ┌───────▼──────┐  ┌───▼───────┐  ┌──▼───────────────┐
-  │ Swiss Market │  │ Scoring   │  │ Output Formatter  │
-  │ Criteria DB  │  │ Rubric    │  │ (docx or markdown)│
-  └──────────────┘  └───────────┘  └──────────────────┘
+cfa_skills/
+├── CLAUDE.md                          ← this file
+├── README.md
+├── cfa_cv_review.html                 ← main application (single-page HTML, v0.2.0)
+└── skills/
+    ├── cv_review_generic/
+    │   └── SKILL.md                   ← 7-dimension generic CV scoring rubric (v0.2.0)
+    └── cv_target_role_score/
+        └── SKILL.md                   ← role-fit extension (v0.1.0)
 ```
 
-### Skills Required
+### Key File: cfa_cv_review.html
 
-| Skill | Status | Purpose |
+Single-page HTML application. All CSS and JS are inline (no build step, no npm). Deployed by copying the file to a hosting location or opening locally. Features implemented as of v0.2.0:
+
+- PDF and DOCX CV upload via `mammoth.convertToHtml` (DOCX) and PDF.js (PDF)
+- Hidden private cloud link detection via HTML extraction (security fix) – catches OneDrive/Dropbox/GDrive URLs that are hyperlinked but not visible as plain text
+- Anthropic API call to `claude-sonnet-4-20250514` with the `cv_review_generic` SKILL.md prompt injected as system prompt
+- Score display: 7-dimension table, overall weighted score, triage block, priority recommendations, summary paragraph
+- Diagnostics panel: exposes raw JSON response, weight verification, model score drift detection
+- Dark mode support via `prefers-color-scheme`
+- No server-side component; API key entered by user in the UI (not stored)
+
+### GitHub Issue Backlog
+
+| # | Title | Status |
 |---|---|---|
-| `cv-review` | To build | Core review logic: ingest CV, score dimensions, generate recommendations |
-| `docx` | Available (public) | Read uploaded .docx CVs; produce formatted review output |
-| `pdf-reading` | Available (public) | Read uploaded PDF CVs |
-| `job-search` | Available (user) | Optional: cross-reference CV against a live role to assess fit |
+| #17 | Implement prompt caching | Open – next priority |
 
-### Skill: `cv-review` – Specification (Draft)
-
-**Inputs:**
-- Client CV (PDF or DOCX)
-- Target role type (optional: e.g., "Risk Manager", "Portfolio Manager", "Quant Analyst")
-- Target seniority level (optional: VP / Director / MD / Analyst)
-
-**Outputs:**
-- Dimension scores (six dimensions + weighted overall)
-- Per-dimension commentary (max 3–5 bullet points each)
-- Priority recommendations (top 3 actions, ranked by impact)
-- Summary paragraph (for Committee member to use verbatim or edit)
-
-**Anti-hallucination protocol:**
-- Every claim in the review must be traceable to a line in the CV.
-- The skill must begin by extracting and listing the factual content it will review (an "observed facts" block), before generating recommendations. This block is internal and not shown to the Client.
-
-### Access and Sharing
-
-**Phase 1 (Committee internal):**
-- The skill lives in a Claude.ai Project accessible to the Committee member(s).
-- Access is managed via the Claude.ai Project sharing feature.
-- No external access. Client CVs are uploaded by the Committee member.
-
-**Phase 2 (Client-facing – conditional on Phase 1 success):**
-- See Step 4 below.
-
-### Data Handling
-
-- Client CVs must not be stored outside the Claude.ai session unless the Client has given explicit consent.
-- Committee members must not upload CVs to any other AI service or public tool.
-- A data processing note (one paragraph) should be prepared for Clients explaining how their data is used. Legal review recommended before Phase 2 launch.
+**Issue #17 – Prompt Caching:**  
+The `cv_review_generic` SKILL.md system prompt is static and large. Caching it with `cache_control: { type: "ephemeral" }` yields approximately 90% token savings from the second CV onward in a session. The plan includes a pre-warm call on form load (before the user submits a CV) to seed the cache. Implementation requires switching to multi-block system prompt format per Anthropic prompt caching spec.
 
 ---
 
-## Step 4 – Path to Client-Facing Release
+## 3. Skills
 
-### Feasibility Assessment
+### cv_review_generic (v0.2.0)
 
-| Factor | Assessment |
+The core scoring rubric. Encodes Karol Brodzinski's expert heuristics. Seven scoring dimensions:
+
+| # | Dimension | Weight |
+|---|---|---|
+| 1 | Achievement Clarity and Evidence | 25% |
+| 2 | Swiss Market Fit | 15% |
+| 3 | Financial Industry Signals | 15% |
+| 4 | Positioning and Professional Identity | 15% |
+| 5 | Structure and Readability | 15% |
+| 6 | Language and Tone | 5% |
+| 7 | Document Hygiene and Modern Formatting | 10% |
+
+**Scoring rules:**
+- Scores are additive from zero (not deductive from 100)
+- Hard deductions apply in Dimension 7 for QR codes or private cloud links (score forced to 0 on that dimension + mandatory red flag at top of output)
+- Director-level seniority ceiling applies to Dimension 1: senior candidates without quantified achievements cannot score above a defined ceiling regardless of other signals
+- Consistency rule: a high dimension score paired with a recommendation that contradicts it is not permitted (e.g., scoring D1 at 80 then recommending adding quantified achievements)
+
+**Calibration history:** Early versions inflated scores significantly. Root causes identified and fixed: wrong rubric encoding, missing dimensions, and incorrect weight application. Diagnostic tooling added to catch future drift.
+
+### cv_target_role_score (v0.1.0)
+
+Extends `cv_review_generic` with an additional role-fit dimension (D7 in this skill, replacing the generic D7). Used when a specific job posting or role type is available. Adds role decomposition (must-have / nice-to-have / Swiss-specific criteria), gap analysis, and CV tailoring recommendations.
+
+---
+
+## 4. Design Principles
+
+| Principle | Detail |
 |---|---|
-| Technical feasibility | High – Claude.ai Artifacts or a lightweight web wrapper could expose the skill |
-| Legal / data protection | Medium risk – nDSG compliance required; PII handling policy needed |
-| Differentiation vs. LinkedIn/LHH | High – Swiss-specific, finance-specific criteria; no generic advice |
-| Committee capacity to support | Low risk in Phase 2 if fully automated; Medium if hybrid |
-| Brand risk | Moderate – output quality must be high before public release |
-
-### Recommended Phasing
-
-| Phase | Description | Gate Criterion |
-|---|---|---|
-| Phase 0 | Build and test `cv-review` skill internally using historical CVs (with Client consent) | Skill produces consistent, accurate reviews on test set |
-| Phase 1 | Committee members use the tool as a drafting assistant; they review and send output | >= 10 reviews completed; satisfaction >= 4.0; consistency >= 0.80 |
-| Phase 2 | Client-facing self-service tool with optional Committee member review gate | Phase 1 criteria met; legal review complete; privacy policy published |
-
-### Differentiation vs. Existing Services
-
-| Dimension | LinkedIn CV Review (Contractor) | LHH / Career Agency | This Tool |
-|---|---|---|---|
-| Industry specificity | Low | Medium | High (finance only) |
-| Swiss market norms | Low | Medium | High |
-| Consistency | Low (human variance) | Medium | High (AI-grounded rubric) |
-| Cost to Client | Medium–High | High | Low / free (Committee service) |
-| Speed | Days | Days–weeks | Minutes |
-| CFA Society credibility | None | None | High (trusted brand) |
+| Anti-hallucination discipline | Every review claim must be traceable to an observable fact in the CV. The skill begins with an "Observed Facts" extraction block before generating recommendations. |
+| Minimal, targeted changes | Each commit addresses a single root cause. Do not batch unrelated changes. |
+| Single source of truth | Scoring rubric lives in SKILL.md; the HTML application injects it at runtime. Do not duplicate rubric logic in JavaScript. |
+| Diagnostic visibility | The diagnostics panel must remain visible in the UI to catch model score drift early. Never remove it without replacement. |
+| Human-in-the-loop (Phase 1) | AI output is a draft. Committee member reviews before client delivery. The UI must make this gate explicit. |
+| Privacy | Client CVs contain PII. No server-side storage. API call is direct browser-to-Anthropic. nDSG and GDPR compliance required for Phase 2. |
 
 ---
 
-## Open Questions
+## 5. GitHub Operations – Patterns and Gotchas
 
-1. **Scope definition:** Should the tool cover all financial roles in Switzerland, or prioritize buy-side / sell-side / risk / quant profiles where Committee expertise is strongest?
-2. **German-language CVs:** When should German-language support be added? What is the Committee's capacity to validate German-language output?
-3. **Feedback loop:** How will the Committee collect outcome data (e.g., did the Client get interviews?) to improve the rubric over time?
-4. **Karol knowledge transfer:** Before building the skill, a structured interview or written knowledge dump from Karol is recommended. His heuristics should be encoded into the rubric, not lost.
-5. **Liability:** Should the Committee publish a disclaimer that the tool provides guidance only and does not guarantee employment outcomes?
-6. **Version control:** SKILL.md and criteria files will evolve. A versioning convention (e.g., `cv-review-v1.0`) should be established from the start.
+**Authentication:** Personal access token with `repo` and `project` scopes. Store in environment variable or Claude Code project instructions; never hardcode in committed files.
+
+**File update pattern (critical):**
+```python
+# ALWAYS fetch a fresh SHA before any PUT operation
+# Stale SHAs cause 409 Conflict errors
+response = requests.get(
+    f"https://api.github.com/repos/Amarows/cfa_skills/contents/{path}",
+    headers={"Authorization": f"token {PAT}"}
+)
+current_sha = response.json()["sha"]
+
+# Then PUT with the fresh SHA
+requests.put(
+    f"https://api.github.com/repos/Amarows/cfa_skills/contents/{path}",
+    headers={"Authorization": f"token {PAT}"},
+    json={"message": commit_message, "content": base64_content, "sha": current_sha}
+)
+```
+
+**Shell scripting reliability:** For long payloads with special characters, write to `/tmp/script.py` and execute with `python3 /tmp/script.py`. Do not use inline `-c` strings for complex operations.
 
 ---
 
-## Next Actions
+## 6. Anthropic API Usage
 
-| Priority | Action | Owner |
+**Model in use:** `claude-sonnet-4-20250514`
+
+**Prompt caching (Issue #17 – pending):**
+```javascript
+// Target implementation for Issue #17
+{
+  model: "claude-sonnet-4-20250514",
+  system: [
+    {
+      type: "text",
+      text: "<full SKILL.md content here>",
+      cache_control: { type: "ephemeral" }
+    }
+  ],
+  messages: [
+    { role: "user", content: "<CV text>" }
+  ]
+}
+```
+Pre-warm call: fire a minimal dummy request with the cached system prompt on form load, before the user submits. This seeds the cache so the first real CV review also benefits from caching.
+
+**DOCX extraction:** `mammoth.convertToHtml` – security-safe, does not execute macros, extracts text and basic structure. Used in preference to direct XML parsing for the main flow.
+
+**Security detection:** After `mammoth.convertToHtml`, the HTML output is scanned for `<a href>` tags pointing to private cloud storage domains (onedrive.live.com, 1drv.ms, dropbox.com, drive.google.com, etc.). This catches links that are visually hidden in the CV (hyperlinked text with no visible URL) – a vector that plain-text extraction misses.
+
+---
+
+## 7. Active Workstreams
+
+| Workstream | Status | Next Action |
 |---|---|---|
-| 1 | Conduct knowledge transfer session with Karol; document his review heuristics | Alex + Karol |
-| 2 | Define target role taxonomy (which roles / seniority levels are in scope) | Committee |
-| 3 | Collect 5–10 anonymized historical CVs for testing | Committee |
-| 4 | Build `cv-review` SKILL.md v0.1 | Alex |
-| 5 | Run pilot on test CVs; calibrate scoring rubric | Alex + 1 Committee member |
-| 6 | Legal / data protection review for Phase 2 scope | Committee + legal advisor |
+| Prompt caching (Issue #17) | Open | Implement multi-block system prompt; add pre-warm call on form load |
+| Karol knowledge transfer | In progress | Structured HR interviews using 45-minute question guide; training CVs with Karol's assessments for skill calibration |
+| Role profile library | Planned | Expand `cv_target_role_score` role-type reference library beyond current 5 profiles |
+| CFO skill mapping appendix | Under discussion | Email drafted to Karol; awaiting response |
+| German-language CV support | Backlog | Phase 2 scope; requires Committee capacity to validate output |
+| LinkedIn promotion post | Pending | Alex prefers short, factual content; self-promotion noted as personally uncomfortable |
+
+---
+
+## 8. Open Questions
+
+1. Should the tool cover all Swiss financial roles, or prioritize buy-side / sell-side / risk / quant profiles where Committee expertise is strongest?
+2. When should German-language support be added? What is the Committee's capacity to validate output?
+3. How will the Committee collect outcome data (did the client get interviews?) to improve the rubric over time?
+4. Should a disclaimer be published stating the tool provides guidance only and does not guarantee employment outcomes?
+5. CFO-specific skill mapping: should this be a dedicated appendix to `cv_review_generic` or a separate skill?
+
+---
+
+## 9. Versioning Convention
+
+Files follow semantic versioning: `MAJOR.MINOR.PATCH`
+
+- MAJOR: breaking change to scoring logic or output format
+- MINOR: new dimension, new heuristic section, or new quality control
+- PATCH: wording clarification, typo fix, minor rubric adjustment
+
+Version is declared in the YAML front matter of each SKILL.md and in the HTML `<title>` tag.
+
+---
+
+## 10. Path to Phase 2 (Client-Facing)
+
+Phase 2 gate criteria (from Phase 1):
+- At least 10 reviews completed with Committee approval
+- Client satisfaction score >= 4.0 (1–5 scale)
+- Inter-rater consistency >= 0.80 (Cohen's kappa)
+- Legal / data protection review complete
+- Privacy policy published
+
+Phase 2 architecture options under consideration: Claude.ai Artifacts wrapper, lightweight web app with serverless backend, or direct Claude.ai Project sharing with clients.
+
+---
+
+*End of CLAUDE.md*
