@@ -770,6 +770,7 @@ let cvBase64 = null;
 let cvMediaType = null;
 let cvTextContent = null; // extracted text for DOCX files
 let lastResult = null;
+let lastUsage = null;
 
 const fileInput = document.getElementById('file-input');
 const uploadZone = document.getElementById('upload-zone');
@@ -889,6 +890,8 @@ function updateBtn() {
   const entered = document.getElementById('api-key').value.trim();
   const hasFile = !!(cvBase64 || cvTextContent);
   btnAnalyze.disabled = !(entered && hasFile);
+  const key = ACCESS_KEYS[entered];
+  if (key) prewarmCache(key);
 }
 
 function showError(msg) {
@@ -932,6 +935,30 @@ const SKILL_NAME = 'cv_review_generic';
 const SKILL_VERSION = '0.2.0';
 const SKILL_URL = 'https://github.com/Amarows/cfa_skills/blob/main/skills/cv_review_generic/SKILL.md';
 
+const MODEL_ID = 'claude-sonnet-4-20250514';
+// Issue #17: cache_control on the system block caches the full rubric prefix
+// (~5.6k tokens, above the model's cacheable minimum); reads cost ~0.1x for
+// 5 minutes after each use.
+const CACHED_SYSTEM = [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }];
+
+// Issue #17: seed the cache before the first real review. max_tokens: 0 runs
+// prefill only — writes the cache, bills no output tokens.
+let prewarmed = false;
+function prewarmCache(apiKey) {
+  if (prewarmed) return;
+  prewarmed = true;
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({ model: MODEL_ID, max_tokens: 0, system: CACHED_SYSTEM, messages: [{ role: 'user', content: 'warmup' }] })
+  }).catch(() => { prewarmed = false; });
+}
+
 const PHASES = [
   'Extracting observed facts from CV\u2026',
   'Scoring six dimensions\u2026',
@@ -966,9 +993,9 @@ async function runReview() {
       : { type: 'text', text: cvTextContent };
 
     const body = {
-      model: 'claude-sonnet-4-20250514',
+      model: MODEL_ID,
       max_tokens: 2048,
-      system: SYSTEM_PROMPT,
+      system: CACHED_SYSTEM,
       messages: [{
         role: 'user',
         content: [
@@ -1003,6 +1030,7 @@ async function runReview() {
     }
 
     const data = await res.json();
+    lastUsage = data.usage || null;
     const raw = (data.content || []).map(b => b.type === 'text' ? b.text : '').join('').trim();
     const clean = raw.replace(/^```json\s*/i, '').replace(/^```/, '').replace(/```$/, '').trim();
     const result = JSON.parse(clean);
@@ -1181,6 +1209,12 @@ function renderResults(r) {
   h += `<div class="diag-row"><span class="diag-key">Dimensions returned by model</span><span class="diag-val">${Object.keys(r.scores || {}).length} (expected 7)</span></div>`;
   h += `<div class="diag-row"><span class="diag-key">Model reported weighted_score</span><span class="diag-val">${wsModel.toFixed(4)}</span></div>`;
   h += `<div class="diag-row"><span class="diag-key">Displayed score (recomputed locally)</span><span class="${wsDrift > 0.5 ? 'diag-warn' : 'diag-ok'}">${ws.toFixed(4)}${wsDrift > 0.5 ? ' \u26a0 drift ' + wsDrift.toFixed(4) + ' pts from model' : ' \u2713 matches model'}</span></div>`;
+  if (lastUsage) {
+    const cr = lastUsage.cache_read_input_tokens || 0;
+    const cw = lastUsage.cache_creation_input_tokens || 0;
+    const ui = lastUsage.input_tokens || 0;
+    h += `<div class="diag-row"><span class="diag-key">Prompt cache (#17)</span><span class="${cr > 0 ? 'diag-ok' : 'diag-warn'}">read ${cr} / wrote ${cw} / uncached ${ui}${cr > 0 ? ' \u2713 cache hit' : ' \u26a0 no cache read'}</span></div>`;
+  }
   h += `<div style="margin:8px 0 4px;font-weight:600;color:var(--text)">Weight check (returned vs expected):</div>`;
   weightCheck.forEach(({k, expected, returned, match}) => {
     const label = DIM_LABELS[k] || k;
