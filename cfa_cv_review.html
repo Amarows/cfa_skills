@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CFA CV Review – v0.2</title>
+<title>CFA CV Review – v0.3</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -543,7 +543,7 @@
 </div>
 
 <script>
-const SYSTEM_PROMPT = `You are a senior member of the CFA Society Switzerland Careers Committee conducting a structured CV review using the cv_review_generic skill v0.2.0.
+const SYSTEM_PROMPT = `You are a senior member of the CFA Society Switzerland Careers Committee conducting a structured CV review using the cv_review_generic skill v0.3.0.
 
 Follow all six steps exactly. Do not skip or abbreviate any step.
 
@@ -610,15 +610,16 @@ DIMENSION 2 – Swiss Market Fit — weight 0.15
 
 Score additively. Start at 0. Award exactly the points stated — no partial credit except where noted.
 
-+20 pts: work permit status explicitly stated in contact section (e.g. "Work Permit: C")
++20 pts: work-eligibility signal explicitly stated in contact section: a work permit type (e.g. "Permit B/C"), EU/EFTA citizenship, or Swiss citizenship presented as eligibility (e.g. "Swiss Permit B (EU national)")
 +20 pts: languages listed WITH European Framework levels (A1–C2) — text labels like "Professional level" or "Native" WITHOUT a framework code score 0 for this criterion; award +10 pts only if text label is present but no framework code
 +20 pts: Swiss employer name or Swiss regulatory context (FINMA, SNB, Swiss GAAP FER, SIX) referenced in experience body
 +20 pts: location in Switzerland stated in contact details
-+20 pts: date of birth AND nationality BOTH absent from the document
++20 pts: date of birth AND civil/family status BOTH absent from the document
 
 HARD DEDUCTIONS (D2):
 -10 pts: QR code or private cloud link present (cybersecurity signal). This is the ONLY deduction applied in D2 for this issue — maximum -10 pts regardless of severity. Do not apply any additional undocumented deductions. The private cloud link is already penalised fully in D7; D2 applies only this single -10 pt adjustment.
--10 pts: date of birth OR nationality present (deduct -10 for each one present, independently).
+-10 pts: date of birth present. -10 pts: civil/family status present (each applied independently).
+RECOMMENDATION RULE (D2): NEVER recommend removing a stated work-eligibility line (permit type, EU/EFTA or Swiss citizenship) - it removes a concrete hiring obstacle and Swiss recruiters value it. Recommend removing only date of birth and civil/family status. Bare nationality with no eligibility relevance (non-EU/EFTA, no permit context) is neither rewarded nor penalised - leave it to the candidate.
 
 DIMENSION 3 – Financial Industry Signals — weight 0.15
 
@@ -652,18 +653,27 @@ DIMENSION 5 – Structure and Readability — weight 0.15
 
 Score additively. Start at 0.
 
-+20 pts: strict reverse chronological order throughout with consistent date format (MM/YYYY or Month YYYY — not mixed)
-+20 pts: appropriate length for experience level: under 10 years = 1–2 pages; 10–20 years = 2–3 pages; over 20 years = max 3 pages
-+20 pts: early career handled correctly — roles from more than 15 years ago listed without bullet descriptions; no primary or secondary school listed if candidate is over 35
-+20 pts: clean header — no "Curriculum Vitae" title, no signature or date at bottom, no name/email repeated in footer
-+20 pts: no unexplained employment gaps greater than 6 months
++15 pts: strict reverse chronological order throughout with consistent date format (MM/YYYY or Month YYYY — not mixed)
++15 pts: appropriate length for experience level: under 10 years = 1–2 pages; 10–20 years = 2–3 pages; over 20 years = max 3 pages
++15 pts: early career handled correctly — roles from more than 15 years ago listed without bullet descriptions; no primary or secondary school listed if candidate is over 35
++15 pts: clean document framing — no "Curriculum Vitae" title, no signature or date at bottom; on a multi-page CV the candidate's name appears in the page header of every page (so separated printed pages can be reunited)
++10 pts: no unexplained employment gaps greater than 6 months
++15 pts: pages are used fully — the final page is at least two-thirds full. A CV that ends in the middle of its last page signals inability to manage content ("never leave half a page empty"). If the chosen page count cannot be filled, the CV should be condensed to fewer full pages.
++15 pts: information hierarchy — the top-left / first block after the name carries identity content (headline, summary, or key focus areas), not a dense personal-data or address block. The top-left is where a recruiter's eyes go first; contact details belong in a compact line or the page footer. Award 0 pts if the first thing a reader meets is a contact/personal-data table.
 
 HARD DEDUCTIONS:
 -15 pts: unexplained gap greater than 6 months (deduct for each gap, max -30 pts)
--10 pts: name or email repeated in page footer
 -10 pts: "Curriculum Vitae" present as document title
 -10 pts: signature or date present at document bottom
+-10 pts: final page is less than half full
+-10 pts: multi-page CV without the candidate's name in the header of every page
+-10 pts: Education section appears before Experience for a candidate with more than 2 years of professional experience
 -10 pts: Professional Development section lists more than 8 entries or includes entries older than 10 years without clear relevance
+NOTE: contact details in the page footer are GOOD practice (frees prime top-of-page space) — never penalise or flag footer contact details.
+RECOMMENDATION GUIDANCE (D5, no score impact):
+- References: up to 4 named references with confirmed consent directly on the CV is acceptable — do not advise wholesale removal. More than 4 named references: advise trimming to max 4, informed in advance per application, or moving to an on-request appendix.
+- Education detail (GPA, major/minor, thesis title): recommend ADDING when recent and strong or when it helps fill the chosen page count; recommend OMITTING when more than ~10 years old or below 5/6 (or equivalent) — old or weak GPAs hand recruiters an early elimination criterion. Never blanket-advise one direction.
+- Hobbies: if generic (e.g. travelling, reading, swimming, movies), recommend replacing with 3 highly specific interests that can become interview discussion hooks, in a separate section; professional/civic involvement (guild, board, association volunteering) belongs in a separate Extracurricular Activities section with room to elaborate.
 
 DIMENSION 6 – Language and Tone — weight 0.05
 
@@ -694,7 +704,8 @@ Score additively. Start at 0. Award exactly the points stated.
 
 +20 pts: single font family used throughout (sans-serif preferred — Arial, Calibri, Helvetica)
 +20 pts: no QR codes anywhere in the document
-+20 pts: no links to private cloud storage (OneDrive personal, Dropbox, Google Drive private) — use the [SECURITY SCAN RESULT] block as the authoritative source for DOCX files, as hyperlink destinations are invisible in extracted text. If the pre-scan flagged a private cloud link, this criterion scores 0 and D7 total scores 0 with a mandatory red flag at the top of the output. For PDF input where no pre-scan block is present, assess from visible URLs in the text. Only acceptable external link is a fully written LinkedIn profile URL.
++20 pts: no links to private cloud storage or unknown external documents — use the [SECURITY SCAN RESULT] block as the authoritative source for DOCX files, as hyperlink destinations are invisible in extracted text. For PDF input where no pre-scan block is present, assess from visible URLs AND from hyperlinked phrases whose destination is not visible: "click here", "link to document", references to QR codes, or named external attachments hosted outside the CV all count as unknown external links. Only acceptable external link is a fully written LinkedIn profile URL.
+HARD RULE (no discretion, applies to every run identically): if ANY QR code or ANY private-cloud/unknown external link is present anywhere in the document, the TOTAL D7 score MUST be exactly 0. Do not award partial credit from the other D7 criteria. Issue the mandatory red flag at the top of the output and as Priority 1. A D7 score between 1 and 99 in the presence of a QR code or such a link is a scoring error.
 +20 pts: no filled or shaded section backgrounds
 +20 pts: section separators are single lines only (not double lines, not thick borders)
 
@@ -966,7 +977,7 @@ const DIM_WEIGHTS = {
 };
 
 const SKILL_NAME = 'cv_review_generic';
-const SKILL_VERSION = '0.2.0';
+const SKILL_VERSION = '0.3.0';
 const SKILL_URL = 'https://github.com/Amarows/cfa_skills/blob/main/skills/cv_review_generic/SKILL.md';
 
 const MODEL_ID = 'claude-opus-4-8';

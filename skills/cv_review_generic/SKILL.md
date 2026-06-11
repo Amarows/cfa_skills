@@ -1,6 +1,6 @@
 ---
 name: cv_review_generic
-version: 0.2.0
+version: 0.3.0
 description: >
   Review a Client CV when no specific target role is known.
   Scores the CV across seven dimensions grounded in Swiss financial
@@ -10,6 +10,24 @@ description: >
   or is open to multiple role types. Always hands off to
   cv_target_role_score when a target role is provided.
 changelog:
+  - version: 0.3.0
+    date: 2026-06-11
+    changes: >
+      First cv_rubric_refine batch (CV_1-CV_3, cold-start, operator
+      override at N=3 — see cv_samples/reports/refine_batch1.md).
+      D2: split nationality-removal from work-eligibility signalling
+      (issue #19) — eligibility (permit/EU-EFTA/Swiss status) rewarded
+      and never recommended for removal; penalties now target date of
+      birth and civil/family status only. D7: QR/private-cloud hard
+      zero made deterministic, hyperlinked phrases with invisible
+      destinations count for PDFs. D5: fill-the-page and top-left
+      information-hierarchy now scored; name-in-page-header required
+      on multi-page CVs; footer contact details explicitly NOT
+      penalised; education-before-experience deduction; conditional
+      GPA/education-detail guidance. Regression-checked against the
+      2026-06-11 golden snapshot: no unintended moves; run-to-run
+      stability improved. Approved by Alex; Karol confirmation
+      requested on the D2 encoding and the GPA condition.
   - version: 0.2.0
     date: 2026-05
     changes: >
@@ -186,11 +204,20 @@ reason + impact. Apply it as the standard when evaluating bullets.
 
 | Criterion | Points |
 |---|---|
-| Work permit status explicitly stated | +20 |
+| Work-eligibility signal explicitly stated (permit type, EU/EFTA citizenship, or Swiss status) | +20 |
 | Languages listed with European Framework levels or equivalent | +20 |
 | Swiss employer names or Swiss regulatory context referenced | +20 |
 | Location in Switzerland stated | +20 |
-| Date of birth and nationality absent | +20 |
+| Date of birth and civil/family status absent | +20 |
+
+**Eligibility vs. personal data (issue #19, refine batch 1):**
+Work-eligibility information (e.g. "Swiss Permit B (EU national)",
+"Swiss citizen") removes a concrete hiring obstacle — Swiss employers
+need cantonal approval for non-EU hires — and must NEVER be
+recommended for removal. Date of birth and civil/family status carry
+bias risk and no hiring value: recommend removing those only. Bare
+nationality with no eligibility relevance is neutral — neither
+rewarded nor penalised.
 
 **Karol's notes on Swiss specifics:**
 - Military service section: positive signal for Swiss roles; neutral
@@ -283,7 +310,21 @@ candidate?
   - Earlier roles: brief listing without descriptions
   - Primary / secondary education: remove if >35 years ago
 - "Curriculum Vitae" title removed from document header: Y/N
-- Name repeated as header on every page: Y/N
+- Name repeated as header on every page (multi-page CVs): Y/N — scored;
+  separated printed pages must be re-unitable
+- Information hierarchy: the top-left / first block after the name
+  carries identity content (headline, summary, or key focus areas),
+  not a dense personal-data or address block. The top-left is where a
+  recruiter's eyes go first; contact details belong in a compact line
+  or the page footer. Contact details in the footer are GOOD practice
+  — never penalise or flag them.
+- Section order: Experience precedes Education for candidates with
+  more than 2 years of professional experience — flag if reversed
+- Education detail (GPA, major/minor, thesis title): conditional —
+  recommend ADDING when recent and strong or when it helps fill the
+  chosen page count; recommend OMITTING when more than ~10 years old
+  or below 5/6 (or equivalent), as old or weak GPAs hand recruiters an
+  early elimination criterion. Never blanket-advise either direction.
 - Signature and date at bottom: flag if present (remove)
 - References appendix: flag if present; advise maximum 4 named
   references, pre-aligned with the candidate, disclosed only on
@@ -325,11 +366,16 @@ the process where the candidate should be fully in control.
 | No filled/shaded section backgrounds | +20 |
 | Section separators: single line above section, not double | +20 |
 
-**Cybersecurity red flag – apply strictly:**
+**Cybersecurity red flag – HARD RULE, no discretion:**
 Any CV containing QR codes or links to private cloud storage
 (Dropbox, OneDrive personal, Google Drive private, etc.) must receive
-a score of 0 on this dimension and a mandatory red flag at the top
-of the output, regardless of other qualities. The only acceptable
+a total score of EXACTLY 0 on this dimension — no partial credit from
+the other criteria — plus a mandatory red flag at the top of the
+output and as Priority 1, regardless of other qualities. For PDFs,
+hyperlinked phrases whose destination is not visible ("click here",
+"link to document", references to QR codes or external attachments)
+count as private/unknown links. A D7 score between 1 and 99 in the
+presence of such an element is a scoring error. The only acceptable
 external link on a CV is a fully written LinkedIn profile URL.
 
 Rationale: Swiss financial industry recruiters follow strict

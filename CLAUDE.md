@@ -27,14 +27,14 @@ cfa_skills/
 ├── CLAUDE.md                          ← this file
 ├── README.md
 ├── .gitignore                         ← excludes cv_samples/ (PII) and .idea/
-├── cfa_cv_review.html                 ← main application (single-page HTML, v0.2.0)
+├── cfa_cv_review.html                 ← main application (single-page HTML, v0.3.0)
 ├── cv_samples/                        ← LOCAL ONLY (gitignored): paired real CVs + expert feedback
 │   ├── CV_1.pdf  +  CV_1_feedback.docx
 │   ├── CV_2.pdf  +  CV_2_feedback.docx
 │   └── CV_3.pdf  +  CV_3_feedback.docx
 └── skills/
     ├── cv_review_generic/
-    │   └── SKILL.md                   ← 7-dimension generic CV scoring rubric (v0.2.0)
+    │   └── SKILL.md                   ← 7-dimension generic CV scoring rubric (v0.3.0)
     ├── cv_target_role_score/
     │   └── SKILL.md                   ← role-fit extension (v0.1.0)
     ├── cv_calibration_eval/           ← diff AI review vs expert feedback, read-only (v0.1.0)
@@ -68,7 +68,7 @@ Single-page HTML application. All CSS and JS are inline (no build step, no npm).
 
 ## 3. Skills
 
-### cv_review_generic (v0.2.0)
+### cv_review_generic (v0.3.0)
 
 The core scoring rubric. Encodes Karol Brodzinski's expert heuristics. Seven scoring dimensions:
 
@@ -221,7 +221,7 @@ Conflicts between new knowledge and the existing rubric are **never auto-resolve
 | CFO skill mapping appendix | Under discussion | Email drafted to Karol; awaiting response |
 | German-language CV support | Backlog | Phase 2 scope; requires Committee capacity to validate output |
 | LinkedIn promotion post | Pending | Alex prefers short, factual content; self-promotion noted as personally uncomfortable |
-| CV learning loop (§7) | In progress | Skills built (`cv_calibration_eval`, `cv_rubric_refine` v0.1.0). Next: run first evals on accumulated CVs; first refinement pass at 5–6 CVs |
+| CV learning loop (§7) | In progress | First full cycle complete 2026-06-11: evals on CV_1–3 under Opus 4.8, golden snapshot baselined, refine batch 1 applied as cv_review_generic v0.3.0 (operator override at N=3). Next: Karol confirmation of D2/GPA encodings; next batch as CVs 4–6 arrive |
 
 ---
 
