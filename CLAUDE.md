@@ -2,7 +2,7 @@
 ## CLAUDE.md – Project Knowledge Base for Claude Code
 
 > **Last updated:** 2026-06  
-> **Current release:** v0.2.0  
+> **Current release:** v0.3.0  
 > **Repo:** https://github.com/Amarows/cfa_skills  
 > **Local path:** C:\Users\alexe_ne2qg0j\OneDrive\Files\Programming\Python\cfa_skills
 
@@ -45,7 +45,7 @@ cfa_skills/
 
 ### Key File: cfa_cv_review.html
 
-Single-page HTML application. All CSS and JS are inline (no build step, no npm). Deployed by copying the file to a hosting location or opening locally. Features implemented as of v0.2.0:
+Single-page HTML application. All CSS and JS are inline (no build step, no npm). Deployed by copying the file to a hosting location or opening locally. Features implemented as of v0.3.0:
 
 - PDF and DOCX CV upload via `mammoth.convertToHtml` (DOCX) and PDF.js (PDF)
 - Hidden private cloud link detection via HTML extraction (security fix) – catches OneDrive/Dropbox/GDrive URLs that are hyperlinked but not visible as plain text
@@ -62,7 +62,7 @@ Single-page HTML application. All CSS and JS are inline (no build step, no npm).
 |---|---|---|
 | #17 | Implement prompt caching | Closed – implemented 2026-06-11 |
 | #21 | Encrypt API key in HTML | Closed – implemented 2026-06-11 |
-| #22 | Model upgrade to claude-opus-4-8 (re-baseline event) | Open – in progress |
+| #22 | Model upgrade to claude-opus-4-8 (re-baseline event) | Closed – completed 2026-06-11 |
 
 ---
 
