@@ -524,7 +524,7 @@
     <div class="logo-block">
       <div class="logo-badge">CFA Society Switzerland &middot; Careers Committee</div>
       <h1 class="site-title">CV Review &ndash; v0.4</h1>
-      <p class="site-sub">Seven-dimension analysis calibrated to Swiss financial industry norms &middot; optional role-fit scoring</p>
+      <p class="site-sub">Six-dimension analysis calibrated to Swiss financial industry norms &middot; optional role-fit scoring</p>
     </div>
     <div style="text-align:right;margin-top:4px;">
       <a class="skill-link" href="https://github.com/Amarows/cfa_skills/blob/main/skills/cv_review_generic/SKILL.md" target="_blank">SKILL.md &rarr;</a>
@@ -550,12 +550,8 @@
     <input type="file" id="file-input" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
   </div>
 
-  <!-- Optional fields -->
+  <!-- Optional fields: seniority | target role + JD (stacked, one column) -->
   <div class="fields-row">
-    <div class="field">
-      <label style="opacity:0.45;">Client&rsquo;s stated goal <span style="font-size:10px;font-weight:500;color:var(--amber);background:var(--amber-bg,#fff8e6);border:0.5px solid var(--amber);border-radius:3px;padding:1px 5px;margin-left:4px;">Under development</span></label>
-      <input type="text" id="client-goal" placeholder="Under development" disabled style="opacity:0.4;cursor:not-allowed;">
-    </div>
     <div class="field">
       <label>Seniority level (optional)</label>
       <select id="seniority">
@@ -566,26 +562,21 @@
         <option value="Managing Director">Managing Director</option>
       </select>
     </div>
-  </div>
-
-  <!-- Target role (optional) — triggers the conditional role-fit call (#24) -->
-  <div class="fields-row">
     <div class="field">
-      <label>Target role (optional)
-        <button class="role-info-btn" onclick="toggleRoleInfo()" title="What is evaluated for each role">&#9432; criteria</button>
-      </label>
-      <select id="target-role" onchange="refreshRoleInfo()">
-        <option value="">No specific role &mdash; generic review only</option>
-        <option value="portfolio_manager">Portfolio Manager / Investment Manager</option>
-        <option value="research_analyst">Investment Research Analyst (equity / credit)</option>
-        <option value="wealth_manager">Wealth Management / Private Banking RM</option>
-        <option value="am_sales">Asset Management Sales / Business Development</option>
-        <option value="risk_manager">Risk Manager (market / credit)</option>
-        <option value="corporate_finance">Corporate Finance / CFO-track / IR</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>Job description (optional &mdash; takes precedence over the profile)</label>
+      <label>Target role (optional)</label>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <select id="target-role" onchange="refreshRoleInfo()" style="flex:1;">
+          <option value="">No specific role &mdash; generic review only</option>
+          <option value="portfolio_manager">Portfolio Manager / Investment Manager</option>
+          <option value="research_analyst">Investment Research Analyst (equity / credit)</option>
+          <option value="wealth_manager">Wealth Management / Private Banking RM</option>
+          <option value="am_sales">Asset Management Sales / Business Development</option>
+          <option value="risk_manager">Risk Manager (market / credit)</option>
+          <option value="corporate_finance">Corporate Finance / CFO-track / IR</option>
+        </select>
+        <button class="role-info-btn" style="margin-left:0;white-space:nowrap;" onclick="toggleRoleInfo()" title="What is evaluated for each role">&#9432; criteria</button>
+      </div>
+      <label style="margin-top:10px;display:block;">Job description (optional &mdash; takes precedence over the profile)</label>
       <textarea id="job-description" rows="1" placeholder="Paste the job posting text"></textarea>
     </div>
   </div>
@@ -1179,9 +1170,8 @@ async function runReview() {
   btnAnalyze.disabled = true;
   document.getElementById('results').style.display = 'none';
 
-  const goal = document.getElementById('client-goal').value.trim();
   const seniority = document.getElementById('seniority').value;
-  const ctx = [goal ? 'Client stated goal: ' + goal + '.' : '', seniority ? 'Seniority level: ' + seniority + '.' : ''].filter(Boolean).join(' ');
+  const ctx = seniority ? 'Seniority level: ' + seniority + '.' : '';
 
   let phaseIdx = 0;
   setStatus(PHASES[0]);
