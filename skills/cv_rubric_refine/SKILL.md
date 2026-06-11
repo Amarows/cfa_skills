@@ -1,6 +1,6 @@
 ---
 name: cv_rubric_refine
-version: 0.1.0
+version: 0.1.1
 description: >
   Propose refinements to the CV review rubric from a batch of
   accumulated discrepancy reports. Aggregates recurring gaps across
@@ -11,6 +11,12 @@ description: >
   rubric SKILL.md. Run deliberately in batch (cold-start trigger: first
   5-6 accumulated CVs), not per-CV.
 changelog:
+  - version: 0.1.1
+    date: 2026-06-11
+    changes: >
+      Pinned model updated claude-sonnet-4-20250514 (retiring 2026-06-15)
+      -> claude-opus-4-8 in the golden snapshot format. Deliberate full
+      re-baseline event per the anti-drift controls (CLAUDE.md S7, issue #22).
   - version: 0.1.0
     date: 2026-06
     changes: >
@@ -137,7 +143,7 @@ a change — a good change is *supposed* to move some scores. The goal is:
 ```
 # Golden Snapshot
 - Rubric version: cv_review_generic vX.Y.Z
-- Model:          claude-sonnet-4-20250514
+- Model:          claude-opus-4-8
 - Date baselined: YYYY-MM-DD
 
 | CV   | D1 | D2 | D3 | D4 | D5 | D6 | D7 | Overall | Key flags |

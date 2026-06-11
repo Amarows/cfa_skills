@@ -30,7 +30,8 @@ cfa_skills/
 ├── cfa_cv_review.html                 ← main application (single-page HTML, v0.2.0)
 ├── cv_samples/                        ← LOCAL ONLY (gitignored): paired real CVs + expert feedback
 │   ├── CV_1.pdf  +  CV_1_feedback.docx
-│   └── CV_2.pdf  +  CV_2_feedback.docx
+│   ├── CV_2.pdf  +  CV_2_feedback.docx
+│   └── CV_3.pdf  +  CV_3_feedback.docx
 └── skills/
     ├── cv_review_generic/
     │   └── SKILL.md                   ← 7-dimension generic CV scoring rubric (v0.2.0)
@@ -48,20 +49,20 @@ Single-page HTML application. All CSS and JS are inline (no build step, no npm).
 
 - PDF and DOCX CV upload via `mammoth.convertToHtml` (DOCX) and PDF.js (PDF)
 - Hidden private cloud link detection via HTML extraction (security fix) – catches OneDrive/Dropbox/GDrive URLs that are hyperlinked but not visible as plain text
-- Anthropic API call to `claude-sonnet-4-20250514` with the `cv_review_generic` SKILL.md prompt injected as system prompt
+- Anthropic API call to `claude-opus-4-8` with the `cv_review_generic` SKILL.md prompt injected as system prompt
 - Score display: 7-dimension table, overall weighted score, triage block, priority recommendations, summary paragraph
 - Diagnostics panel: exposes raw JSON response, weight verification, model score drift detection
 - Dark mode support via `prefers-color-scheme`
-- No server-side component; API key entered by user in the UI (not stored)
+- No server-side component; API key stored AES-GCM-encrypted in the page, decrypted in memory by the access password (PBKDF2, WebCrypto — issue #21). Rotation helper: `cv_samples/encrypt_key.py` (local)
+- Prompt caching (issue #17): system prompt sent as cached multi-block (`cache_control: ephemeral`); `max_tokens: 0` pre-warm fires once a valid password is entered; cache hit/miss shown in diagnostics panel
 
 ### GitHub Issue Backlog
 
 | # | Title | Status |
 |---|---|---|
-| #17 | Implement prompt caching | Open – next priority |
-
-**Issue #17 – Prompt Caching:**  
-The `cv_review_generic` SKILL.md system prompt is static and large. Caching it with `cache_control: { type: "ephemeral" }` yields approximately 90% token savings from the second CV onward in a session. The plan includes a pre-warm call on form load (before the user submits a CV) to seed the cache. Implementation requires switching to multi-block system prompt format per Anthropic prompt caching spec.
+| #17 | Implement prompt caching | Closed – implemented 2026-06-11 |
+| #21 | Encrypt API key in HTML | Closed – implemented 2026-06-11 |
+| #22 | Model upgrade to claude-opus-4-8 (re-baseline event) | Open – in progress |
 
 ---
 
@@ -136,13 +137,13 @@ requests.put(
 
 ## 6. Anthropic API Usage
 
-**Model in use:** `claude-sonnet-4-20250514`
+**Model in use:** `claude-opus-4-8`
 
-**Prompt caching (Issue #17 – pending):**
+**Prompt caching (Issue #17 – implemented):**
 ```javascript
-// Target implementation for Issue #17
+// As implemented in cfa_cv_review.html
 {
-  model: "claude-sonnet-4-20250514",
+  model: "claude-opus-4-8",
   system: [
     {
       type: "text",
@@ -155,7 +156,7 @@ requests.put(
   ]
 }
 ```
-Pre-warm call: fire a minimal dummy request with the cached system prompt on form load, before the user submits. This seeds the cache so the first real CV review also benefits from caching.
+Pre-warm call: a `max_tokens: 0` request with the cached system prompt fires once a valid access password is entered (prefill-only — writes the cache, bills no output tokens). This seeds the cache so the first real CV review also benefits from caching. Note: minimum cacheable prefix on Opus 4.8 is 4096 tokens; the rubric prompt is ~5.6k tokens, above the bar.
 
 **DOCX extraction:** `mammoth.convertToHtml` – security-safe, does not execute macros, extracts text and basic structure. Used in preference to direct XML parsing for the main flow.
 
@@ -190,7 +191,7 @@ The calibration history (§3) is a record of score inflation from rubric changes
 
 1. **Golden-snapshot regression harness.** Baseline = current scores + key flags for the calibration set, stored as a snapshot (**local/gitignored — derived from PII**). On *any* rubric change, re-run the set and diff against the snapshot. Adjudicate every moved score: *intended* → accept and re-baseline; *unintended* → fix the rubric before shipping. The goal is not identical scores but **"only intended changes, every unintended change detected."**
 2. **Noise floor.** LLMs are non-deterministic even at temperature 0. Before trusting any diff, score one CV 3–5× unchanged to measure variance. Diffs inside that band are noise; only larger moves count.
-3. **Pinned model.** `claude-sonnet-4-20250514`. A model upgrade shifts all scores — treat it as a deliberate, full re-baseline event, never an accident.
+3. **Pinned model.** `claude-opus-4-8`. A model upgrade shifts all scores — treat it as a deliberate, full re-baseline event, never an accident.
 
 ### Cold-Start vs. Mature Mode
 
