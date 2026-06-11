@@ -1028,9 +1028,12 @@ async function runReview() {
 
     const body = {
       model: MODEL_ID,
-      // Opus 4.8 needs more output headroom than Sonnet 4 — 2048 truncated
-      // the review JSON mid-string (observed during #22 re-baseline).
-      max_tokens: 4096,
+      // Opus 4.8: without adaptive thinking the model writes reasoning into
+      // the visible response and truncates the JSON even at 4096 tokens
+      // (observed during #22 re-baseline). Thinking blocks are ignored by
+      // the response parser below.
+      max_tokens: 16000,
+      thinking: { type: 'adaptive' },
       system: CACHED_SYSTEM,
       messages: [{
         role: 'user',
