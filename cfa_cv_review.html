@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CFA CV Review – v0.3</title>
+<title>CFA CV Review – v0.4</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -205,6 +205,44 @@
     outline: none;
   }
   .field input:focus, .field select:focus { border-color: var(--text3); }
+  .field textarea {
+    width: 100%;
+    font-size: 13px;
+    padding: 9px 10px;
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    resize: vertical;
+    min-height: 38px;
+  }
+  .field textarea:focus { border-color: var(--text3); }
+  .role-info-btn {
+    font-size: 11px;
+    padding: 2px 8px;
+    margin-left: 6px;
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    font-family: var(--sans);
+  }
+  .role-info-btn:hover { background: var(--bg2); }
+  .role-info {
+    font-size: 12px;
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    background: var(--bg2);
+    padding: 12px 14px;
+    margin: -8px 0 1.25rem;
+    color: var(--text2);
+    line-height: 1.55;
+  }
+  .role-info h4 { margin: 0 0 4px; font-size: 12px; color: var(--text); }
+  .role-info ul { margin: 2px 0 8px 16px; padding: 0; }
+  .role-info .ri-cat { font-weight: 600; color: var(--text); margin-top: 6px; }
 
   /* Buttons */
   .btn-primary {
@@ -485,8 +523,8 @@
   <header class="site-header">
     <div class="logo-block">
       <div class="logo-badge">CFA Society Switzerland &middot; Careers Committee</div>
-      <h1 class="site-title">CV Review &ndash; v0.2</h1>
-      <p class="site-sub">Six-dimension analysis calibrated to Swiss financial industry norms</p>
+      <h1 class="site-title">CV Review &ndash; v0.4</h1>
+      <p class="site-sub">Seven-dimension analysis calibrated to Swiss financial industry norms &middot; optional role-fit scoring</p>
     </div>
     <div style="text-align:right;margin-top:4px;">
       <a class="skill-link" href="https://github.com/Amarows/cfa_skills/blob/main/skills/cv_review_generic/SKILL.md" target="_blank">SKILL.md &rarr;</a>
@@ -529,6 +567,29 @@
       </select>
     </div>
   </div>
+
+  <!-- Target role (optional) — triggers the conditional role-fit call (#24) -->
+  <div class="fields-row">
+    <div class="field">
+      <label>Target role (optional)
+        <button class="role-info-btn" onclick="toggleRoleInfo()" title="What is evaluated for each role">&#9432; criteria</button>
+      </label>
+      <select id="target-role" onchange="refreshRoleInfo()">
+        <option value="">No specific role &mdash; generic review only</option>
+        <option value="portfolio_manager">Portfolio Manager / Investment Manager</option>
+        <option value="research_analyst">Investment Research Analyst (equity / credit)</option>
+        <option value="wealth_manager">Wealth Management / Private Banking RM</option>
+        <option value="am_sales">Asset Management Sales / Business Development</option>
+        <option value="risk_manager">Risk Manager (market / credit)</option>
+        <option value="corporate_finance">Corporate Finance / CFO-track / IR</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Job description (optional &mdash; takes precedence over the profile)</label>
+      <textarea id="job-description" rows="1" placeholder="Paste the job posting text"></textarea>
+    </div>
+  </div>
+  <div class="role-info" id="role-info" style="display:none"></div>
 
   <button class="btn-primary" id="btn-analyze" disabled onclick="runReview()">Analyse CV</button>
 
@@ -817,6 +878,104 @@ let cvMediaType = null;
 let cvTextContent = null; // extracted text for DOCX files
 let lastResult = null;
 let lastUsage = null;
+let lastCvBlock = null;     // reused by the conditional role-fit call (#24)
+let lastRoleFit = null;
+let lastRoleFitUsage = null;
+
+// Role-type reference library — cv_target_role_score v0.3.0 (issue #5).
+// Single data structure drives BOTH the role-fit prompt and the info panel,
+// so help text and scoring criteria cannot drift apart.
+const ROLE_PROFILES = {
+  portfolio_manager: {
+    label: 'Portfolio Manager / Investment Manager',
+    blurb: 'Buy-side investment management across equities, fixed income or multi-asset.',
+    must: ['5+ years investment management or analysis', 'CFA charter or Level III candidate', 'Depth in at least one asset class', 'Track record with performance figures (vs benchmark, AUM managed)', 'Portfolio construction and risk budgeting', 'Platform fluency (Bloomberg, FactSet, Aladdin or equivalent)'],
+    nice: ['CAIA (alternatives)', 'Python/R for analysis', 'ESG/SFDR credentials', 'Client-facing or investment-committee experience', 'Second Swiss language'],
+    swiss: ['FINMA portfolio-manager licensing context (FinIA)', 'Pension-fund (BVG/LPP) mandate knowledge', 'Zurich = German, Geneva = French', 'Work-eligibility signal expected']
+  },
+  research_analyst: {
+    label: 'Investment Research Analyst (equity / credit)',
+    blurb: 'Sell-side or buy-side research with defined sector or asset-class coverage.',
+    must: ['2+ years research or analysis', 'Financial modelling and valuation (DCF, multiples; credit: ratings frameworks, covenants)', 'Defined coverage area', 'CFA progression (charter at senior level)', 'Evidence of written research output', 'Bloomberg/Refinitiv'],
+    nice: ['Published coverage or analyst rankings', 'IFRS / Swiss GAAP FER literacy', 'Data skills (Python/SQL)', 'Swiss sector coverage (pharma, financials, industrials, luxury)'],
+    swiss: ['SIX-listed issuer coverage is a strong signal', 'German (Zurich) or French (Geneva)', 'Research independence / MiFID awareness', 'Work-eligibility signal expected']
+  },
+  wealth_manager: {
+    label: 'Wealth Management / Private Banking RM',
+    blurb: 'Relationship manager or investment advisor serving private clients.',
+    must: ['Demonstrable client-book development (net new assets, retention, AUM figures)', 'SAQ CWMA (required by many Swiss banks) or CFA', 'Suitability and cross-border rules competence', 'Languages matched to client segment'],
+    nice: ['CIWM', 'Wealth/tax-planning depth', 'Lombard lending and alternative products', 'UHNW or entrepreneur segment', 'Additional client-market languages'],
+    swiss: ['FinSA/FIDLEG suitability and client segmentation', 'Cross-border frameworks (FATCA, CRS)', 'FINMA conduct context', 'Swiss residency frequently required']
+  },
+  am_sales: {
+    label: 'Asset Management Sales / Business Development',
+    blurb: 'Institutional or wholesale distribution of investment products.',
+    must: ['Several years institutional/wholesale investment sales', 'Vehicle knowledge: UCITS, ETFs, segregated mandates, Swiss institutional funds', 'Fluent German AND English (Deutschschweiz; French for Romandie)', 'Network among pension funds, insurers, foundations, family offices or consultants', 'Sales-target / net-new-asset record'],
+    nice: ['CFA or CAIA', 'Product specialism (fixed income, alternatives, ESG)', 'CRM discipline', 'Consultant-relations experience'],
+    swiss: ['BVG/LPP pension landscape and investment guidelines', 'FinSA client segmentation for distribution', 'Swiss investment-consultant ecosystem', 'Work-eligibility signal expected']
+  },
+  risk_manager: {
+    label: 'Risk Manager (market / credit)',
+    blurb: 'Risk management in banks and insurers, market or credit focus.',
+    must: ['4–7 years risk management in banking, insurance or risk-focused consulting/audit', 'Basel III/IV framework knowledge', 'Quantitative methods (VaR/ES, stress testing, PD/LGD/EAD)', 'FRM or CFA', 'Statistical tooling (Python, R, SAS, SQL)', 'Derivatives product knowledge'],
+    nice: ['Model validation', 'FRTB', 'Climate/ESG risk', 'SST (Swiss Solvency Test) for insurance', 'German fluency'],
+    swiss: ['FINMA circulars and supervisory expectations', 'Swiss banking structure (SIBs, cantonal banks, private banks)', 'English-first, German a strong plus', 'Work-eligibility signal expected']
+  },
+  corporate_finance: {
+    label: 'Corporate Finance / CFO-track / IR',
+    blurb: 'Finance leadership, controlling and investor relations on the corporate side.',
+    must: ['10+ years finance with 5+ in leadership for CFO roles (scaled for IR/controlling steps)', 'IFRS AND Swiss GAAP FER applied knowledge', 'Financial planning, controlling, board-level reporting', 'Capital-markets evidence for IR (fundraising, roadshows, analyst relations) with own contribution quantified'],
+    nice: ['Swiss certified expert in accounting/controlling or CPA', 'CFA', 'IPO/M&A transactions', 'ESG reporting (GRI)', 'Treasury'],
+    swiss: ['Swiss Code of Obligations reporting duties', 'SIX listing rules / ad-hoc publicity for listed companies', 'German or French per region (English often sufficient in listed/biotech/medtech)', 'AHV/BVG employer-side basics']
+  }
+};
+
+// Role-fit system prompt — cv_target_role_score v0.3.0, Call 2 of the two-call
+// contract. Generic dimension scores arrive as INPUT and are never re-scored.
+// No cache_control: this prompt is ~2k tokens, below the model's 4096-token
+// cacheable minimum, so a breakpoint would silently do nothing.
+const ROLE_FIT_PROMPT = `You are a senior member of the CFA Society Switzerland Careers Committee scoring ROLE FIT using the cv_target_role_score skill v0.3.0. A generic seven-dimension review (cv_review_generic) has already been completed; its dimension scores are provided as input. You must NOT re-score any generic dimension.
+
+INPUTS you will receive in the user message: the CV, ONE target role profile (must-have / nice-to-have / Swiss-specific criteria) and/or a job description, and the seven generic dimension scores. If a job description is provided, it takes precedence over the profile; use the profile to fill gaps the JD leaves implicit.
+
+SCORING PHILOSOPHY: start at 0, award only for evidence explicitly present in the CV. A criterion is covered only if the CV demonstrates it; an unevidenced claim counts at half weight at most. Do not infer or give benefit of the doubt.
+
+STEP 1 - Decompose the role into must-have, nice-to-have and Swiss-specific criteria (from the JD if given, else the profile).
+
+STEP 2 - Score coverage 0-100 for each group:
+- must_have (weight 0.50 within D8)
+- nice_to_have (weight 0.25)
+- swiss_specific (weight 0.25)
+D8 = 0.50*must_have + 0.25*nice_to_have + 0.25*swiss_specific
+
+STEP 3 - Blended overall, computed EXACTLY from the provided generic scores and D8:
+blended_overall = D1*0.20 + D2*0.10 + D3*0.10 + D4*0.10 + D5*0.10 + D6*0.05 + D7*0.10 + D8*0.25
+Classification: 80-100 Strong Fit | 60-79 Moderate Fit | 40-59 Weak Fit | 0-39 Poor Fit.
+
+STEP 4 - Gap analysis: every uncovered must-have criterion, each marked bridgeable (certification in progress, transferable experience) or hard, with how to address or frame it.
+
+STEP 5 - CV tailoring recommendations: max 5, highest impact first, each naming the CV section, the edit, and why it improves fit for THIS role.
+
+STEP 6 - One-sentence fit verdict, next step (apply_now | edit_first | do_not_apply), and 2-4 strengths to highlight in a cover letter.
+
+CRITICAL: Respond ONLY with a valid JSON object. No markdown fences. Exact schema:
+{
+  "role_fit": {
+    "role_type": "",
+    "jd_provided": false,
+    "must_have":      { "score": 0, "weight": 0.50, "covered": [], "gaps": [] },
+    "nice_to_have":   { "score": 0, "weight": 0.25, "covered": [], "gaps": [] },
+    "swiss_specific": { "score": 0, "weight": 0.25, "covered": [], "gaps": [] },
+    "d8_score": 0
+  },
+  "gap_analysis": [ { "criterion": "", "type": "must_have", "bridgeable": true, "how_to_address": "" } ],
+  "tailoring_recommendations": [ { "edit": "", "section": "", "why": "" } ],
+  "blended_overall": 0.0,
+  "fit_classification": "",
+  "fit_verdict": "",
+  "next_step": "",
+  "cover_letter_strengths": []
+}`;
 
 const fileInput = document.getElementById('file-input');
 const uploadZone = document.getElementById('upload-zone');
@@ -1036,6 +1195,7 @@ async function runReview() {
     const cvContentBlock = cvBase64
       ? { type: 'document', source: { type: 'base64', media_type: cvMediaType, data: cvBase64 } }
       : { type: 'text', text: cvTextContent };
+    lastCvBlock = cvContentBlock;
 
     const body = {
       model: MODEL_ID,
@@ -1086,8 +1246,15 @@ async function runReview() {
     const clean = raw.replace(/^```json\s*/i, '').replace(/^```/, '').replace(/```$/, '').trim();
     const result = JSON.parse(clean);
 
-    setStatus('Analysis complete.', false);
     renderResults(result);
+
+    // Conditional role-fit call (#24): fires ONLY when a role or JD is given.
+    const roleKey = document.getElementById('target-role').value;
+    const jd = document.getElementById('job-description').value.trim();
+    if (roleKey || jd) {
+      await runRoleFit(result, roleKey, jd, apiKey);
+    }
+    setStatus('Analysis complete.', false);
 
   } catch (err) {
     clearInterval(phaseTimer);
@@ -1095,6 +1262,158 @@ async function runReview() {
     showError('<strong>Error:</strong> ' + esc(err.message));
     btnAnalyze.disabled = false;
   }
+}
+
+// ---- Role-fit (#24): info panel + conditional second call ----
+
+function roleInfoHtml(key) {
+  const cat = (t, items) => `<div class="ri-cat">${t}</div><ul>` + items.map(i => `<li>${esc(i)}</li>`).join('') + `</ul>`;
+  if (key && ROLE_PROFILES[key]) {
+    const p = ROLE_PROFILES[key];
+    return `<h4>${esc(p.label)}</h4><div>${esc(p.blurb)}</div>`
+      + cat('Must-have criteria (50% of role fit)', p.must)
+      + cat('Nice-to-have (25%)', p.nice)
+      + cat('Swiss-specific (25%)', p.swiss);
+  }
+  let h = `<h4>Role profiles</h4><div>Selecting a role adds a role-fit analysis on top of the generic review: coverage of must-have / nice-to-have / Swiss-specific criteria, gap analysis and tailoring advice (one additional model call). Without a role, only the generic review runs — no extra cost. Profiles: cv_target_role_score v0.3.0.</div>`;
+  for (const k in ROLE_PROFILES) {
+    h += `<div class="ri-cat">${esc(ROLE_PROFILES[k].label)}</div><div>${esc(ROLE_PROFILES[k].blurb)}</div>`;
+  }
+  return h;
+}
+
+function toggleRoleInfo() {
+  const panel = document.getElementById('role-info');
+  if (panel.style.display === 'none') {
+    panel.innerHTML = roleInfoHtml(document.getElementById('target-role').value);
+    panel.style.display = 'block';
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+function refreshRoleInfo() {
+  const panel = document.getElementById('role-info');
+  if (panel.style.display !== 'none') {
+    panel.innerHTML = roleInfoHtml(document.getElementById('target-role').value);
+  }
+}
+
+async function runRoleFit(genericResult, roleKey, jd, apiKey) {
+  setStatus('Scoring role fit…');
+  const profile = roleKey ? ROLE_PROFILES[roleKey] : null;
+  const dimKeys = { D1: 'achievement_clarity', D2: 'swiss_market_fit', D3: 'financial_industry_signals', D4: 'positioning_identity', D5: 'structure_readability', D6: 'language_tone', D7: 'document_hygiene' };
+  const genericScores = {};
+  for (const d in dimKeys) {
+    const s = (genericResult.scores[dimKeys[d]] || {}).score;
+    genericScores[d] = typeof s === 'number' ? s : 0;
+  }
+
+  let txt = 'TARGET ROLE: ' + (profile ? profile.label : 'as defined by the job description below') + '\n';
+  if (profile) {
+    txt += '\nROLE PROFILE:\nMust-have:\n- ' + profile.must.join('\n- ')
+        + '\nNice-to-have:\n- ' + profile.nice.join('\n- ')
+        + '\nSwiss-specific:\n- ' + profile.swiss.join('\n- ') + '\n';
+  }
+  if (jd) txt += '\nJOB DESCRIPTION (takes precedence over the profile):\n' + jd + '\n';
+  txt += '\nGENERIC DIMENSION SCORES (input — do not re-score): ' + JSON.stringify(genericScores);
+  txt += '\n\nScore role fit for this CV per the skill. Return only the JSON object.';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: MODEL_ID,
+        max_tokens: 32000,
+        thinking: { type: 'adaptive' },
+        system: ROLE_FIT_PROMPT,
+        messages: [{ role: 'user', content: [lastCvBlock, { type: 'text', text: txt }] }]
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || ('API error ' + res.status));
+    }
+    const data = await res.json();
+    lastRoleFitUsage = data.usage || null;
+    const raw = (data.content || []).map(b => b.type === 'text' ? b.text : '').join('').trim();
+    const clean = raw.replace(/^```json\s*/i, '').replace(/^```/, '').replace(/```$/, '').trim();
+    lastRoleFit = JSON.parse(clean);
+    renderRoleFit(lastRoleFit, genericScores);
+  } catch (err) {
+    // Role fit must never destroy the generic results — degrade gracefully.
+    const div = document.createElement('div');
+    div.className = 'error-msg';
+    div.style.display = 'block';
+    div.innerHTML = '<strong>Role-fit scoring failed:</strong> ' + esc(err.message) + ' The generic review above is unaffected.';
+    document.getElementById('results').appendChild(div);
+  }
+}
+
+function renderRoleFit(rf, genericScores) {
+  const f = rf.role_fit || {};
+  const d8 = typeof f.d8_score === 'number' ? f.d8_score : 0;
+  // Local blend verification — model arithmetic is not trusted (same principle
+  // as the generic weighted score).
+  const W = { D1: 0.20, D2: 0.10, D3: 0.10, D4: 0.10, D5: 0.10, D6: 0.05, D7: 0.10 };
+  let blend = d8 * 0.25;
+  for (const d in W) blend += (genericScores[d] || 0) * W[d];
+  const blendModel = typeof rf.blended_overall === 'number' ? rf.blended_overall : 0;
+  const drift = Math.abs(blend - blendModel);
+  const cls = blend >= 80 ? ['Strong Fit', 'green'] : blend >= 60 ? ['Moderate Fit', 'amber'] : blend >= 40 ? ['Weak Fit', 'amber'] : ['Poor Fit', 'red'];
+
+  let h = `<div class="section-title" style="margin-top:2rem">Role Fit — ${esc(f.role_type || '')}</div>`;
+  h += `<div style="display:flex;align-items:center;gap:12px;margin:8px 0 14px">`;
+  h += `<span class="pill-${cls[1]}" style="padding:4px 12px;border-radius:12px;font-weight:700">${cls[0]}</span>`;
+  h += `<span style="font-size:20px;font-weight:700" class="c-${cls[1]}">${blend.toFixed(1)}%</span>`;
+  h += `<span style="font-size:11px;color:var(--text3)">blended overall (role fit 25% + seven generic dimensions re-weighted)</span></div>`;
+
+  const sub = (name, o, w) => {
+    const s = (o && typeof o.score === 'number') ? o.score : 0;
+    return `<div class="diag-row"><span class="diag-key">${name} (${w})</span><span class="diag-val c-${scoreColor(s)}">${s}/100</span></div>`;
+  };
+  h += sub('Must-have coverage', f.must_have, '50%') + sub('Nice-to-have coverage', f.nice_to_have, '25%') + sub('Swiss-specific coverage', f.swiss_specific, '25%');
+  h += `<div class="diag-row"><span class="diag-key">D8 Role Fit</span><span class="diag-val c-${scoreColor(d8)}">${d8.toFixed(0)}/100</span></div>`;
+
+  if (rf.fit_verdict) h += `<p style="margin:12px 0 4px;font-size:13px"><strong>Verdict:</strong> ${esc(rf.fit_verdict)} <em>(${esc(String(rf.next_step || '').replace(/_/g, ' '))})</em></p>`;
+
+  if (Array.isArray(rf.gap_analysis) && rf.gap_analysis.length) {
+    h += `<div class="ri-cat" style="margin-top:10px;font-weight:600">Gaps against must-have criteria</div>`;
+    rf.gap_analysis.forEach(g => {
+      const tag = g.bridgeable ? '<span class="pill-amber" style="padding:1px 7px;border-radius:9px;font-size:10px">bridgeable</span>' : '<span class="pill-red" style="padding:1px 7px;border-radius:9px;font-size:10px">hard gap</span>';
+      h += `<div style="font-size:12px;margin:4px 0">${tag} <strong>${esc(g.criterion)}</strong>${g.how_to_address ? ' — ' + esc(g.how_to_address) : ''}</div>`;
+    });
+  }
+
+  if (Array.isArray(rf.tailoring_recommendations) && rf.tailoring_recommendations.length) {
+    h += `<div class="ri-cat" style="margin-top:10px;font-weight:600">Tailoring recommendations for this role</div><ol style="font-size:12px;margin:4px 0 0 18px;padding:0">`;
+    rf.tailoring_recommendations.forEach(t => { h += `<li style="margin:3px 0"><strong>${esc(t.section)}:</strong> ${esc(t.edit)}${t.why ? ' <span style="color:var(--text3)">(' + esc(t.why) + ')</span>' : ''}</li>`; });
+    h += `</ol>`;
+  }
+
+  if (Array.isArray(rf.cover_letter_strengths) && rf.cover_letter_strengths.length) {
+    h += `<div class="ri-cat" style="margin-top:10px;font-weight:600">Cover-letter strengths</div><ul style="font-size:12px;margin:4px 0 0 18px;padding:0">`;
+    rf.cover_letter_strengths.forEach(s => { h += `<li>${esc(s)}</li>`; });
+    h += `</ul>`;
+  }
+
+  h += `<div class="diag-row" style="margin-top:12px"><span class="diag-key">Blend check (local recompute)</span><span class="${drift > 0.5 ? 'diag-warn' : 'diag-ok'}">${blend.toFixed(2)}${drift > 0.5 ? ' ⚠ drift ' + drift.toFixed(2) + ' vs model ' + blendModel.toFixed(2) : ' ✓ matches model'}</span></div>`;
+  if (lastRoleFitUsage) {
+    h += `<div class="diag-row"><span class="diag-key">Role-fit call usage</span><span class="diag-val">in ${lastRoleFitUsage.input_tokens || 0} / out ${lastRoleFitUsage.output_tokens || 0}</span></div>`;
+  }
+  h += `<p style="font-size:10px;color:var(--text3);margin-top:8px">Role-fit scores are not yet expert-calibrated (no role-targeted ground truth); treat as decision support. Generic dimension scores above are unchanged by this analysis.</p>`;
+
+  const div = document.createElement('div');
+  div.id = 'role-fit-panel';
+  div.innerHTML = h;
+  const results = document.getElementById('results');
+  results.appendChild(div);
 }
 
 function scoreColor(s) { return s >= 70 ? 'green' : s >= 45 ? 'amber' : 'red'; }

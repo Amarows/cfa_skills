@@ -36,7 +36,7 @@ cfa_skills/
     ├── cv_review_generic/
     │   └── SKILL.md                   ← 7-dimension generic CV scoring rubric (v0.3.0)
     ├── cv_target_role_score/
-    │   └── SKILL.md                   ← role-fit extension (v0.2.0, 6 validated role profiles)
+    │   └── SKILL.md                   ← role-fit extension (v0.3.0, 6 validated role profiles, two-call contract)
     ├── cv_calibration_eval/           ← diff AI review vs expert feedback, read-only (v0.1.0)
     │   └── SKILL.md
     └── cv_rubric_refine/              ← batch rubric refinement from samples, human-gated (v0.1.0)
@@ -45,7 +45,7 @@ cfa_skills/
 
 ### Key File: cfa_cv_review.html
 
-Single-page HTML application. All CSS and JS are inline (no build step, no npm). Deployed by copying the file to a hosting location or opening locally. Features implemented as of v0.3.0:
+Single-page HTML application. All CSS and JS are inline (no build step, no npm). Deployed by copying the file to a hosting location or opening locally. Features implemented as of v0.4.0:
 
 - PDF and DOCX CV upload via `mammoth.convertToHtml` (DOCX) and PDF.js (PDF)
 - Hidden private cloud link detection via HTML extraction (security fix) – catches OneDrive/Dropbox/GDrive URLs that are hyperlinked but not visible as plain text
@@ -55,6 +55,7 @@ Single-page HTML application. All CSS and JS are inline (no build step, no npm).
 - Dark mode support via `prefers-color-scheme`
 - No server-side component; API key stored AES-GCM-encrypted in the page, decrypted in memory by the access password (PBKDF2, WebCrypto — issue #21). Rotation helper: `cv_samples/encrypt_key.py` (local)
 - Prompt caching (issue #17): system prompt sent as cached multi-block (`cache_control: ephemeral`); `max_tokens: 0` pre-warm fires once a valid password is entered; cache hit/miss shown in diagnostics panel
+- Role-fit scoring (issue #24, two-call architecture): optional role selector (6 profiles, cv_target_role_score v0.3.0) + JD paste field + per-role criteria info panel. Call 2 fires ONLY when a role/JD is given; receives Call 1's dimension scores as input, never re-scores them; blended overall recomputed locally. ROLE_PROFILES JS constant drives both the prompt and the info panel. Role-fit prompt deliberately uncached (~2k tokens < 4096 cacheable minimum)
 
 ### GitHub Issue Backlog
 
@@ -90,7 +91,7 @@ The core scoring rubric. Encodes Karol Brodzinski's expert heuristics. Seven sco
 
 **Calibration history:** Early versions inflated scores significantly. Root causes identified and fixed: wrong rubric encoding, missing dimensions, and incorrect weight application. Diagnostic tooling added to catch future drift.
 
-### cv_target_role_score (v0.2.0)
+### cv_target_role_score (v0.3.0)
 
 Extends `cv_review_generic` with an additional role-fit dimension (D7 in this skill, replacing the generic D7). Used when a specific job posting or role type is available. Adds role decomposition (must-have / nice-to-have / Swiss-specific criteria), gap analysis, and CV tailoring recommendations.
 
