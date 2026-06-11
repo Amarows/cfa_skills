@@ -1031,8 +1031,9 @@ async function runReview() {
       // Opus 4.8: without adaptive thinking the model writes reasoning into
       // the visible response and truncates the JSON even at 4096 tokens
       // (observed during #22 re-baseline). Thinking blocks are ignored by
-      // the response parser below.
-      max_tokens: 16000,
+      // the response parser below. 16000 also truncated on long CVs —
+      // thinking length varies per run; keep in sync with eval_runner.py.
+      max_tokens: 32000,
       thinking: { type: 'adaptive' },
       system: CACHED_SYSTEM,
       messages: [{
