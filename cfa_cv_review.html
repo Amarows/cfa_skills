@@ -1028,7 +1028,9 @@ async function runReview() {
 
     const body = {
       model: MODEL_ID,
-      max_tokens: 2048,
+      // Opus 4.8 needs more output headroom than Sonnet 4 — 2048 truncated
+      // the review JSON mid-string (observed during #22 re-baseline).
+      max_tokens: 4096,
       system: CACHED_SYSTEM,
       messages: [{
         role: 'user',
