@@ -2,7 +2,7 @@
 ## CLAUDE.md – Project Knowledge Base for Claude Code
 
 > **Last updated:** 2026-06  
-> **Current release:** v0.3.0  
+> **Current release:** v0.4.0 (Session 2: role-profile library)  
 > **Repo:** https://github.com/Amarows/cfa_skills  
 > **Local path:** C:\Users\alexe_ne2qg0j\OneDrive\Files\Programming\Python\cfa_skills
 
@@ -36,7 +36,7 @@ cfa_skills/
     ├── cv_review_generic/
     │   └── SKILL.md                   ← 7-dimension generic CV scoring rubric (v0.3.0)
     ├── cv_target_role_score/
-    │   └── SKILL.md                   ← role-fit extension (v0.1.0)
+    │   └── SKILL.md                   ← role-fit extension (v0.2.0, 6 validated role profiles)
     ├── cv_calibration_eval/           ← diff AI review vs expert feedback, read-only (v0.1.0)
     │   └── SKILL.md
     └── cv_rubric_refine/              ← batch rubric refinement from samples, human-gated (v0.1.0)
@@ -90,9 +90,11 @@ The core scoring rubric. Encodes Karol Brodzinski's expert heuristics. Seven sco
 
 **Calibration history:** Early versions inflated scores significantly. Root causes identified and fixed: wrong rubric encoding, missing dimensions, and incorrect weight application. Diagnostic tooling added to catch future drift.
 
-### cv_target_role_score (v0.1.0)
+### cv_target_role_score (v0.2.0)
 
 Extends `cv_review_generic` with an additional role-fit dimension (D7 in this skill, replacing the generic D7). Used when a specific job posting or role type is available. Adds role decomposition (must-have / nice-to-have / Swiss-specific criteria), gap analysis, and CV tailoring recommendations.
+
+Role-Type Reference Library (v0.2.0, issue #5): six profiles derived from CFA-member career statistics + Swiss market structure + the CV Doctor corpus — Portfolio Manager, Investment Research Analyst, Wealth Management/PB Relationship Manager, AM Sales/BD, Risk Manager, Corporate Finance/CFO-track/IR. Each carries must-have / nice-to-have / Swiss-specific criteria validated against Swiss job postings (June 2026).
 
 ---
 
@@ -217,7 +219,7 @@ Conflicts between new knowledge and the existing rubric are **never auto-resolve
 |---|---|---|
 | Prompt caching (Issue #17) | Open | Implement multi-block system prompt; add pre-warm call on form load |
 | Karol knowledge transfer | In progress | Structured HR interviews using 45-minute question guide; training CVs with Karol's assessments for skill calibration |
-| Role profile library | Planned | Expand `cv_target_role_score` role-type reference library beyond current 5 profiles |
+| Role profile library | Done (2026-06-11) | 6 validated profiles shipped in cv_target_role_score v0.2.0 (#5 closed) |
 | CFO skill mapping appendix | Under discussion | Email drafted to Karol; awaiting response |
 | German-language CV support | Backlog | Phase 2 scope; requires Committee capacity to validate output |
 | LinkedIn promotion post | Pending | Alex prefers short, factual content; self-promotion noted as personally uncomfortable |
