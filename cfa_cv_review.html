@@ -758,13 +758,48 @@ CRITICAL: Respond ONLY with a valid JSON object. No markdown fences. No preamble
   "summary": ""
 }`;
 
-// Password → API key map.
-// Key is stored split+reversed to avoid secret scanning on public repo.
-// To rotate: reverse the new key, split at midpoint, update _a and _b.
-function _dk(a, b) { return (a + b).split('').reverse().join(''); }
-const ACCESS_KEYS = {
-  'cfa': _dk('AAwKbqd3-QyhDztxRwX4-4foSj6KJc9xxfrmPrASjxkXCdAGHCW_DY', 'dj1ZfK6KJmLiSaV1XXFBTRTUAdGX2gcEKCGmvKgGB-30ipa-tna-ks')
+// Issue #21: API key stored AES-GCM-encrypted, keyed by the access password
+// via PBKDF2-HMAC-SHA256. A wrong password fails decryption — the key is not
+// recoverable from page source. Rotate with cv_samples/encrypt_key.py (local).
+const ENCRYPTED_KEY = {
+  salt: 'CybR8ExqE+SSMtQ9RUwCjg==',
+  iv: 'yDUyR94/cUOzrEeq',
+  ct: '7HmD2izBF1TXnFCpMp3SMPB2DYMedZTYKpWQke/H8KF3AmXRByE+jrT95+8xTOmNZGU1daewEdznRLMGEp3E70V/YalNKtLT3L7fICA3fBoPynT8RE8pTKlf6MUeuLPIJ+71ghanQIj19+jYOveUcqheIwQVGuYFtiZDQw==',
+  iter: 600000
 };
+
+let unlockedKey = null;  // decrypted API key — memory only, never persisted
+let unlockTried = null;  // last password attempted, to avoid re-deriving per call
+
+function b64ToBytes(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+
+async function unlockKey(password) {
+  if (password === unlockTried) return unlockedKey;
+  unlockTried = password;
+  unlockedKey = null;
+  try {
+    const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+    const aesKey = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: b64ToBytes(ENCRYPTED_KEY.salt), iterations: ENCRYPTED_KEY.iter, hash: 'SHA-256' },
+      baseKey, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(ENCRYPTED_KEY.iv) }, aesKey, b64ToBytes(ENCRYPTED_KEY.ct));
+    unlockedKey = new TextDecoder().decode(pt);
+  } catch (e) {
+    unlockedKey = null;
+  }
+  return unlockedKey;
+}
+
+// Attempt unlock shortly after the user stops typing; on success, pre-warm
+// the prompt cache (#17) so the first review hits a warm cache.
+let unlockTimer = null;
+function scheduleUnlock(pw) {
+  clearTimeout(unlockTimer);
+  unlockTimer = setTimeout(async () => {
+    const key = await unlockKey(pw);
+    if (key) prewarmCache(key);
+  }, 500);
+}
 
 let cvBase64 = null;
 let cvMediaType = null;
@@ -890,8 +925,7 @@ function updateBtn() {
   const entered = document.getElementById('api-key').value.trim();
   const hasFile = !!(cvBase64 || cvTextContent);
   btnAnalyze.disabled = !(entered && hasFile);
-  const key = ACCESS_KEYS[entered];
-  if (key) prewarmCache(key);
+  if (entered) scheduleUnlock(entered);
 }
 
 function showError(msg) {
@@ -968,7 +1002,7 @@ const PHASES = [
 
 async function runReview() {
   const entered = document.getElementById('api-key').value.trim();
-  const apiKey = ACCESS_KEYS[entered];
+  const apiKey = await unlockKey(entered);
   if (!apiKey) { showError('Incorrect password.'); return; }
   if (!cvBase64 && !cvTextContent) return;
   clearError();
