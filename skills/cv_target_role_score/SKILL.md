@@ -1,6 +1,6 @@
 ---
 name: cv_target_role_score
-version: 0.2.0
+version: 0.3.0
 description: >
   Score and review a Client CV against one or more specific target
   roles in the Swiss financial industry. Extends cv_review_generic
@@ -8,6 +8,21 @@ description: >
   Use when the Client has identified a specific role, job posting,
   or role type they are targeting.
 changelog:
+  - version: 0.3.0
+    date: 2026-06-11
+    changes: >
+      Web-integration release. Role-fit dimension renamed D7 -> D8 (no
+      collision with the generic D7 Document Hygiene). Blended-score
+      table fixed: the phantom "Relevance Breadth" dimension removed,
+      all seven cv_review_generic dimensions retained at compressed
+      weights with D8 Role Fit at 25%. Added the operational contract
+      (two-call mode: generic review runs unchanged and calibrated;
+      role-fit is a separate, conditional second call that receives the
+      generic scores as input and never re-scores them), the JSON
+      output schema for the web app, an explicit do-not-run trigger
+      rule when no role is selected (cost control), and a calibration
+      disclaimer (no expert ground truth for role-fit yet; excluded
+      from the golden snapshot).
   - version: 0.2.0
     date: 2026-06-11
     changes: >
@@ -41,10 +56,35 @@ recommendations.
 - Client has provided a job posting or job description
 - Committee member wants to assess fit before advising whether to apply
 
-## Relationship to cv_review_generic
+## Relationship to cv_review_generic — Operational Contract
 
-This skill **extends** cv_review_generic. Run the generic review first
-(or run it in parallel), then add the role-fit layer below.
+This skill **extends** cv_review_generic without ever modifying it.
+
+**Two-call mode (web application):**
+1. **Call 1 — generic review.** cv_review_generic runs exactly as
+   calibrated (cached prompt, golden-snapshot protected). The model
+   never sees role instructions during generic scoring — this is what
+   guarantees role context cannot perturb the calibrated dimensions.
+2. **Call 2 — role fit (this skill), CONDITIONAL.** Fires only when
+   the user has selected a role type or provided a job description.
+   **If no target role is given, this skill must not run at all** —
+   the generic review is complete on its own and the second call would
+   be pure cost.
+
+**Call 2 inputs:** the CV, ONE role profile from the reference library
+below (inject only the selected profile, not the whole library) or the
+provided JD, and the seven dimension scores from Call 1.
+
+**Score passthrough rule:** the seven generic dimension scores are
+inputs, passed through verbatim into the blended computation. This
+skill NEVER re-scores a generic dimension. It scores only D8 Role Fit
+and computes the blend.
+
+**Calibration disclaimer:** role-fit scores have no expert ground
+truth yet (all expert feedback collected so far is role-agnostic).
+D8 and the blended score are excluded from the golden snapshot and the
+cv_calibration_eval loop until role-targeted expert reviews exist.
+Present them as decision support, not calibrated measurements.
 
 ## Inputs
 
@@ -82,31 +122,46 @@ Extract from the job description (or infer from role title if no JD):
 
 ## Step 2 – Role-Fit Scoring
 
-Score the CV against the target role on the following dimensions.
+Score the CV against the target role. Generic dimensions D1–D7 are
+NOT re-scored — their values come from Call 1 (cv_review_generic).
 
-### Dimension 7 – Role Fit Score (added to generic six)
+### Dimension 8 – Role Fit Score (added to the generic seven)
 
-| Sub-dimension | Weight within D7 | Score (0–100) |
+| Sub-dimension | Weight within D8 | Score (0–100) |
 |---|---|---|
 | Must-have criteria coverage | 50% | |
 | Nice-to-have criteria coverage | 25% | |
 | Swiss-specific requirements coverage | 25% | |
 
-**Role Fit Score = weighted average of sub-dimensions**
+**D8 Role Fit = 0.50 × must_have + 0.25 × nice_to_have + 0.25 × swiss_specific**
 
-### Overall Score (with target role)
+Scoring discipline (same philosophy as cv_review_generic): start at 0,
+award only for evidence explicitly present in the CV. A must-have
+criterion is *covered* only if the CV demonstrates it — a claim
+without evidence counts at half weight at most.
 
-| Dimension | Weight | Score |
+### Blended Overall Score (with target role)
+
+All seven generic dimensions are retained at compressed weights;
+D8 carries 25%. Generic scores are passed through verbatim.
+
+| Dimension | Generic weight | Blended weight |
 |---|---|---|
-| Achievement Clarity | 20% | |
-| Swiss Market Fit | 15% | |
-| Financial Industry Signals | 15% | |
-| Relevance Breadth | 10% | |
-| Structure and Readability | 8% | |
-| Language and Tone | 7% | |
-| Role Fit (D7) | 25% | |
+| D1 Achievement Clarity and Evidence | 25% | 20% |
+| D2 Swiss Market Fit | 15% | 10% |
+| D3 Financial Industry Signals | 15% | 10% |
+| D4 Positioning and Professional Identity | 15% | 10% |
+| D5 Structure and Readability | 15% | 10% |
+| D6 Language and Tone | 5% | 5% |
+| D7 Document Hygiene and Modern Formatting | 10% | 10% |
+| D8 Role Fit (this skill) | — | 25% |
 
-**Overall Score = weighted average**
+**Blended Overall = D1×0.20 + D2×0.10 + D3×0.10 + D4×0.10 + D5×0.10 + D6×0.05 + D7×0.10 + D8×0.25**
+
+Weight rationale: there is no calibration benchmark for the blend yet
+(noted 2026-06-11); the 25% D8 share follows the original v0.1.0
+design intent, with the generic dimensions compressed roughly
+proportionally. Revisit once role-targeted expert feedback exists.
 
 ### Fit Classification
 
@@ -148,12 +203,45 @@ Provide:
 
 ## Output Format
 
-Deliver output as structured markdown. Prefix the output with the
+**Interactive use:** deliver structured markdown prefixed with the
 role-fit classification banner:
 
 ```
 ROLE FIT: [Strong / Moderate / Weak / Poor] – Overall Score: XX%
 ```
+
+**Web application (Call 2):** respond ONLY with a valid JSON object,
+no markdown fences, exact schema:
+
+```json
+{
+  "role_fit": {
+    "role_type": "",
+    "jd_provided": false,
+    "must_have":      { "score": 0, "weight": 0.50, "covered": [], "gaps": [] },
+    "nice_to_have":   { "score": 0, "weight": 0.25, "covered": [], "gaps": [] },
+    "swiss_specific": { "score": 0, "weight": 0.25, "covered": [], "gaps": [] },
+    "d8_score": 0
+  },
+  "gap_analysis": [
+    { "criterion": "", "type": "must_have", "bridgeable": true, "how_to_address": "" }
+  ],
+  "tailoring_recommendations": [
+    { "edit": "", "section": "", "why": "" }
+  ],
+  "blended_overall": 0.0,
+  "fit_classification": "",
+  "fit_verdict": "",
+  "next_step": "apply_now | edit_first | do_not_apply",
+  "cover_letter_strengths": []
+}
+```
+
+Rules: `gap_analysis` covers every uncovered must-have criterion;
+`tailoring_recommendations` max 5, highest impact first;
+`blended_overall` computed exactly from the passed-in generic scores
+and `d8_score` using the blended weights; `fit_classification` from
+the classification table.
 
 ---
 
