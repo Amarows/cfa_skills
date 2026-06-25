@@ -34,7 +34,7 @@ cfa_skills/
 │   └── CV_3.pdf  +  CV_3_feedback.docx
 └── skills/
     ├── cv_review_generic/
-    │   └── SKILL.md                   ← 7-dimension generic CV scoring rubric (v0.3.0)
+    │   └── SKILL.md                   ← 7-dimension generic CV scoring rubric (v0.4.1)
     ├── cv_target_role_score/
     │   └── SKILL.md                   ← role-fit extension (v0.3.0, 6 validated role profiles, two-call contract)
     ├── cv_calibration_eval/           ← diff AI review vs expert feedback, read-only (v0.1.0)
@@ -69,7 +69,7 @@ Single-page HTML application. All CSS and JS are inline (no build step, no npm).
 
 ## 3. Skills
 
-### cv_review_generic (v0.3.0)
+### cv_review_generic (v0.4.1)
 
 The core scoring rubric. Encodes Karol Brodzinski's expert heuristics. Seven scoring dimensions:
 

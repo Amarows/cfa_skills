@@ -1,6 +1,6 @@
 ---
 name: cv_review_generic
-version: 0.3.0
+version: 0.4.1
 description: >
   Review a Client CV when no specific target role is known.
   Scores the CV across seven dimensions grounded in Swiss financial
@@ -10,6 +10,33 @@ description: >
   or is open to multiple role types. Always hands off to
   cv_target_role_score when a target role is provided.
 changelog:
+  - version: 0.4.1
+    date: 2026-06-25
+    changes: >
+      Anti-drift / anti-deflation batch, prompted by
+      alexey_malashonak_cv_risk_quant.docx (Director, generic score
+      35.5 vs ~65 faithful — three independent over-penalties, all
+      model drift rather than rubric intent). Three guards added:
+      (1) D7 anti-hallucination — the hard cybersecurity zero now fires
+      ONLY on positive evidence of a QR code or private/unknown link
+      (named in extracted text, a cloud URL, or the application's link
+      scanner). The model had labelled an embedded headshot a "QR code",
+      forcing D7=0, a false Priority-1 red flag and a D2 deduction; the
+      Observed-Facts QR field and the D7 rule now state the input is
+      text-only and an embedded image with no QR/cloud text is a photo.
+      (2) D1 floor rule — the Director/MD calibration is a ceiling on
+      CVs that lack quantification, never grounds for a zero on a CV
+      that has it; quantified candidate-owned outcomes in 2+ roles set a
+      floor of 50, partial-attribution is a within-band deduction. The
+      model had scored D1=0 while its own strengths note acknowledged
+      numeric figures (consistency error). (3) D5 employment-gap guard —
+      gaps are explicitly NOT a D5 criterion; the model had invented a
+      "-30 for unexplained gaps" penalty. Owed before ship: re-run the
+      golden-snapshot regression (CV_1-3) to confirm no unintended moves
+      on the calibration set. Karol confirmation not required for the
+      guards themselves (anti-hallucination / consistency, no new
+      heuristic); the D5 question of whether gaps deserve a real scored
+      criterion is logged for Karol.
   - version: 0.3.0
     date: 2026-06-11
     changes: >
@@ -89,7 +116,14 @@ from the CV. This block is internal – do not show it to the Client.
 - Date of birth present (Y/N) — flag if yes
 - Nationality / civil status present (Y/N) — flag if yes
 - Work permit status stated (Y/N; value if stated)
-- QR codes or links to external clouds / private storage present (Y/N) — flag if yes
+- QR codes or links to external clouds / private storage present (Y/N) — flag if yes.
+  **Evidence required — do not infer.** This input is text-only; you
+  cannot see images. Record `Y` ONLY when the extracted text or the
+  application's link scanner names it: literal "QR", "scan to…", or a
+  cloud URL (Dropbox, OneDrive personal, Google Drive private, etc.).
+  An embedded image with no such text is a PHOTO — record it under
+  "Photo included", never as a QR code. Never assert a QR code from the
+  mere presence of an image; doing so triggers a false hard-zero on D7.
 
 **Structure inventory:**
 - Sections present (list all, in order)
@@ -197,6 +231,20 @@ reason + impact. Apply it as the standard when evaluating bullets.
 - MD / C-suite: strategic impact, P&L or capital figures, board-level
   outcomes expected. Generic high-level descriptions are a significant
   negative signal at this level.
+
+**Floor rule (anti-deflation):** the Director / MD seniority calibration
+is a *ceiling* on CVs that lack quantification — it is NEVER grounds for
+a zero on a CV that has it. Where quantified, candidate-owned outcomes
+appear in two or more roles (e.g. a forecasting system achieving 2.5%
+std dev on a 16-month horizon, an 11-month platform delivery, 10x AUM
+growth), the CV is by definition not "predominantly duty-based" and D1
+cannot score below 50. A weak or narrative-heavy most-recent role lowers
+the score *within* the band; it does not floor the dimension. Scoring D1
+at 0 while the dimension's own strengths note acknowledges numeric
+figures is a consistency error (see Quality Controls). Attribution still
+matters — figures owned by a team/portfolio with no stated candidate
+contribution earn half credit at most — but partial-attribution is a
+within-band deduction, not a path to zero.
 
 ---
 
@@ -330,6 +378,15 @@ candidate?
   references, pre-aligned with the candidate, disclosed only on
   request and calibrated per specific application
 
+**Employment gaps are NOT scored here (anti-drift):** the criteria
+listed above are the complete D5 set. Do not deduct for gaps between
+roles — no such rule exists in this rubric, and inventing one with a
+fabricated magnitude (e.g. "−30 for unexplained gaps") is a scoring
+error. A materially long gap may be surfaced as a neutral observation
+for the Committee member to raise with the Client, never as a D5
+deduction. (Whether employment gaps warrant a dedicated scored
+criterion is a pending Karol decision; until then, do not score them.)
+
 **Karol's note on references:**
 Having more than 4–5 named references means the candidate cannot
 realistically align all of them with the storyline for each specific
@@ -377,6 +434,15 @@ hyperlinked phrases whose destination is not visible ("click here",
 count as private/unknown links. A D7 score between 1 and 99 in the
 presence of such an element is a scoring error. The only acceptable
 external link on a CV is a fully written LinkedIn profile URL.
+
+**Trigger requires positive evidence (anti-hallucination):** apply the
+hard zero ONLY when a QR code or private/unknown link is actually
+evidenced — named in the extracted text ("QR", "scan to…"), present as
+a cloud URL, or reported by the application's link scanner. You cannot
+see images; an embedded image with no such textual or scanner evidence
+is a photo, not a QR code, and must NOT trigger the hard zero or the
+red flag. Defaulting to "QR code present" because the document contains
+an image is a scoring error of the same severity as missing a real one.
 
 Rationale: Swiss financial industry recruiters follow strict
 cybersecurity protocols. A QR code or private cloud link in a CV
