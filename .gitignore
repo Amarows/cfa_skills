@@ -1,5 +1,10 @@
 # Personal data – never commit
 cv_samples/
 
+# Secrets – never commit
+credentials.md
+*.pw
+.env
+
 # IDE
 .idea/
