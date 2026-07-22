@@ -669,9 +669,10 @@ Score additively. Start at 0. Award exactly the points stated — no partial cre
 +20 pts: date of birth AND civil/family status BOTH absent from the document
 
 HARD DEDUCTIONS (D2):
--10 pts: QR code or private cloud link present (cybersecurity signal). This is the ONLY deduction applied in D2 for this issue — maximum -10 pts regardless of severity. Do not apply any additional undocumented deductions. The private cloud link is already penalised fully in D7; D2 applies only this single -10 pt adjustment.
+-10 pts: genuine QR code or private cloud link present (cybersecurity signal), as confirmed by the [SECURITY SCAN RESULT] block. An embedded photo/headshot/logo is NOT a QR code and triggers NO deduction here. This is the ONLY deduction applied in D2 for this issue — maximum -10 pts regardless of severity. Do not apply any additional undocumented deductions. The private cloud link is already penalised fully in D7; D2 applies only this single -10 pt adjustment.
 -10 pts: date of birth present. -10 pts: civil/family status present (each applied independently).
 RECOMMENDATION RULE (D2): NEVER recommend removing a stated work-eligibility line (permit type, EU/EFTA or Swiss citizenship) - it removes a concrete hiring obstacle and Swiss recruiters value it. Recommend removing only date of birth and civil/family status. Bare nationality with no eligibility relevance (non-EU/EFTA, no permit context) is neither rewarded nor penalised - leave it to the candidate.
+PHOTO RULE (D2): a professional headshot is a normal and accepted convention on Swiss CVs and is a positive Swiss-market signal. Never penalise it and never recommend removing it. Treat it as a strength in commentary. (Note: date of birth and civil status must still be recommended for removal even when they accompany a photo.)
 
 DIMENSION 3 – Financial Industry Signals — weight 0.15
 
@@ -755,7 +756,7 @@ DIMENSION 7 – Document Hygiene and Modern Formatting — weight 0.10
 Score additively. Start at 0. Award exactly the points stated.
 
 +20 pts: single font family used throughout (sans-serif preferred — Arial, Calibri, Helvetica)
-+20 pts: no QR codes anywhere in the document
++20 pts: no QR codes anywhere in the document. NOTE: an embedded photo, headshot, logo or icon is NOT a QR code — award this credit for such images. Only a genuine QR code (a scannable square matrix barcode, or one the pre-scan explicitly names as "QR code present") forfeits this credit. If the pre-scan reports an embedded raster image but does not confirm a QR code, award the full +20.
 +20 pts: no links to private cloud storage or unknown external documents — use the [SECURITY SCAN RESULT] block as the authoritative source for DOCX files, as hyperlink destinations are invisible in extracted text. For PDF input where no pre-scan block is present, assess from visible URLs AND from hyperlinked phrases whose destination is not visible: "click here", "link to document", references to QR codes, or named external attachments hosted outside the CV all count as unknown external links. Only acceptable external link is a fully written LinkedIn profile URL.
 HARD RULE (no discretion, applies to every run identically): if ANY QR code or ANY private-cloud/unknown external link is present anywhere in the document, the TOTAL D7 score MUST be exactly 0. Do not award partial credit from the other D7 criteria. Issue the mandatory red flag at the top of the output and as Priority 1. A D7 score between 1 and 99 in the presence of a QR code or such a link is a scoring error.
 +20 pts: no filled or shaded section backgrounds
@@ -1027,7 +1028,11 @@ function loadFile(file) {
             /https?:\/\/dl\.dropboxusercontent\.com\//i,
             /https?:\/\/drive\.google\.com\/(?!.*[?&]usp=sharing)/i,
           ];
-          const qrPattern = /qr[\s_-]?code|data:image\/(png|jpeg|gif)/i;
+          // A "qr code" can only be asserted from explicit text; an inlined
+          // data:image is ANY raster (headshot, logo, icon) and must NOT be
+          // treated as a QR code — mammoth inlines every embedded image.
+          const qrPattern = /qr[\s_-]?code/i;
+          const embeddedImagePattern = /data:image\/(png|jpe?g|gif|bmp|webp)/i;
 
           let detectedPrivateUrl = null;
           for (const pat of privatePatterns) {
@@ -1035,6 +1040,7 @@ function loadFile(file) {
             if (m) { detectedPrivateUrl = m[0]; break; }
           }
           const hasQr = qrPattern.test(html);
+          const hasEmbeddedImage = embeddedImagePattern.test(html);
 
           // --- FOOTER SCAN: detect name/email repeated in last 200 chars of plain text ---
           const parser = new DOMParser();
@@ -1052,7 +1058,10 @@ function loadFile(file) {
             securityBlock += `This link is hidden behind display text and not visible in the CV body. It constitutes a private cloud link as defined in D7. Set private_cloud_links to "Y - detected: ${detectedPrivateUrl}" and D7 score must be 0.\n\n`;
           }
           if (hasQr) {
-            securityBlock += `[SECURITY SCAN RESULT] QR code or embedded image detected. Set private_cloud_links to "Y - QR code present" if a QR code is confirmed.\n\n`;
+            securityBlock += `[SECURITY SCAN RESULT] The literal text "QR code" appears in the document. Set private_cloud_links to "Y - QR code present" and D7 must be 0.\n\n`;
+          }
+          if (hasEmbeddedImage && !hasQr) {
+            securityBlock += `[SECURITY SCAN RESULT] An embedded raster image is present in the DOCX. This is almost always a professional headshot (normal and expected on Swiss CVs) or a small logo/icon — NOT a QR code. A QR code cannot be confirmed from text extraction, so do NOT treat this image as a QR code, do NOT set private_cloud_links to Y, and do NOT floor D7. Award D7's "no QR codes" credit normally.\n\n`;
           }
           if (hasFooter) {
             securityBlock += `[SECURITY SCAN RESULT] Page footer detected: name or email appears to repeat at the bottom of the document. Set footer_present to "Y".\n\n`;
