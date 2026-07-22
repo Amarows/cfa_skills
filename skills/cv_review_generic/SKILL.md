@@ -1,6 +1,6 @@
 ---
 name: cv_review_generic
-version: 0.4.1
+version: 0.4.2
 description: >
   Review a Client CV when no specific target role is known.
   Scores the CV across seven dimensions grounded in Swiss financial
@@ -10,6 +10,16 @@ description: >
   or is open to multiple role types. Always hands off to
   cv_target_role_score when a target role is provided.
 changelog:
+  - version: 0.4.2
+    date: 2026-07-22
+    changes: >
+      D2 photo policy — a professional headshot is now explicitly a
+      positive Swiss-market signal: never penalised, never recommended
+      for removal, surfaced as a strength in commentary (date of birth /
+      civil status removal advice unaffected). Prompted by the live tool
+      flagging Alex's headshot as a "QR code" (see v0.4.1). Operator
+      decision (Alex); Karol confirmation pending. Owed before ship:
+      golden-snapshot re-run to confirm no unintended moves on CV_1-3.
   - version: 0.4.1
     date: 2026-06-25
     changes: >
@@ -266,6 +276,13 @@ recommended for removal. Date of birth and civil/family status carry
 bias risk and no hiring value: recommend removing those only. Bare
 nationality with no eligibility relevance is neutral — neither
 rewarded nor penalised.
+
+**Professional photo (Swiss convention):** a professional headshot is a
+normal and accepted convention on Swiss CVs and reads as a positive
+Swiss-market signal. Never penalise it and never recommend its removal;
+surface it as a strength in commentary. This is distinct from date of
+birth and civil/family status, which must still be recommended for
+removal even when they accompany a photo. *Pending Karol confirmation.*
 
 **Karol's notes on Swiss specifics:**
 - Military service section: positive signal for Swiss roles; neutral
