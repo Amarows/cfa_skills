@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CFA CV Review – v0.4</title>
+<title>CFA CV Review – v0.4.1</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -523,7 +523,7 @@
   <header class="site-header">
     <div class="logo-block">
       <div class="logo-badge">CFA Society Switzerland &middot; Careers Committee</div>
-      <h1 class="site-title">CV Review &ndash; v0.4</h1>
+      <h1 class="site-title">CV Review &ndash; v0.4.1</h1>
       <p class="site-sub">Seven-dimension analysis calibrated to Swiss financial industry norms &middot; optional role-fit scoring</p>
     </div>
     <div style="text-align:right;margin-top:4px;">
@@ -595,7 +595,7 @@
 </div>
 
 <script>
-const SYSTEM_PROMPT = `You are a senior member of the CFA Society Switzerland Careers Committee conducting a structured CV review using the cv_review_generic skill v0.3.0.
+const SYSTEM_PROMPT = `You are a senior member of the CFA Society Switzerland Careers Committee conducting a structured CV review using the cv_review_generic skill v0.4.2.
 
 Follow all six steps exactly. Do not skip or abbreviate any step.
 
@@ -613,11 +613,11 @@ Extract ALL of the following:
 - years_experience: estimated total
 - num_roles: count of distinct employer roles listed
 - cv_length_pages: estimated
-- private_cloud_links: any QR codes or links to OneDrive/Dropbox/Google Drive private storage (Y/N) — CRITICAL flag if Y
+- private_cloud_links: QR codes or links to OneDrive/Dropbox/Google Drive private storage (Y/N) — CRITICAL flag if Y. EVIDENCE REQUIRED, do not infer: this input is text-only and you cannot see images. Record Y ONLY when the extracted text or the [SECURITY SCAN RESULT] block names it — literal "QR"/"scan to…" text, or a private-cloud URL. An embedded image with no such text or scanner finding is a PHOTO (a normal, positive Swiss-CV element), never a QR code. Asserting a QR code from the mere presence of an image is a scoring error that triggers a false hard-zero on D7.
 - footer_present: name or email repeated in page footer (Y/N)
 - headline_present: role-specific headline at top of CV (Y/N). DETECTION RULE: a headline is any short line (typically 3–8 words) that names a role type and appears between the contact block and the summary paragraph. It may be all-caps, bold, or centred. Examples: "AI PRODUCT LEADER & TECHNICAL STRATEGIST", "Senior Risk Manager", "Quantitative Analyst | Asset Management". Do NOT require a section label — detect by position and content.
 - core_competencies_present: dedicated keywords/skills block present before the Experience section (Y/N). DETECTION RULE: this is typically a single bold line or short paragraph of role-specific terms separated by bullets (•) or pipes (|), appearing between the summary and the Experience section. It does not need to be labelled "Core Competencies" — detect by structure and position.
-- unexplained_gaps: any employment gaps > 6 months not explained (Y/N, note period)
+- unexplained_gaps: any employment gaps > 6 months not explained (Y/N, note period). NEUTRAL OBSERVATION ONLY — not scored in any dimension (see D5). Record for the Committee member's awareness; never convert it into a deduction or red flag.
 - director_level_financial_figure: scan the most recent role only. Does it contain at least one explicit CHF or USD amount representing cost saved, revenue generated, budget managed, or P&L impact? User counts, adoption percentages, efficiency ratios, and team size figures do NOT qualify. Answer Y or N and quote the exact phrase if Y. Example of qualifying: "saved CHF 2M", "managed USD 50M budget", "generated CHF 1.2M revenue". Example of non-qualifying: "600+ users", "95% adoption", "material cost reduction", "USD 100M+ portfolios" (team figure, not candidate's own financial contribution). CRITICAL: "material cost reduction", "material cost impact", "significant cost savings", "cost efficiencies achieved" are ALL non-qualifying — they are vague phrases without a number. If the only financial language in the most recent role is one of these phrases, the answer is N.
 - format_issues: mixed fonts, text boxes, shaded backgrounds, double section separators (describe or "none")
 
@@ -656,7 +656,9 @@ If director_level_financial_figure = N: cap D1 at 60. Do not exceed this regardl
 If the most recent role is described entirely in paragraphs without any structured bullets: cap D1 at 45.
 Apply the lower of the two caps if both conditions are true.
 
-FLOOR: minimum score is 0 (negative arithmetic does not go below 0).
+ANTI-DEFLATION FLOOR (mandatory — the ceiling is NEVER grounds for a zero on a CV that is quantified): if at least TWO distinct roles in the last 10 years each contain at least one bullet with a candidate-owned quantified outcome (a %, count, timeframe, or CHF/USD figure tied to the candidate's own action), then D1 CANNOT be scored below 50 after all deductions. Such a CV is by definition not "predominantly duty-based". The hard deductions and the seniority ceiling operate WITHIN the band between this floor and the ceiling — a weak or narrative-heavy most-recent role lowers the score within that band; it never floors the dimension. Scoring D1 at or near 0 while your own strengths note or observed_facts acknowledge numeric figures is a consistency error (see the consistency rule). Attribution still matters — a figure owned by a team/portfolio with no stated candidate contribution earns half credit at most — but partial attribution is a within-band deduction, not a path below the floor.
+
+FLOOR: absolute minimum score is 0 (negative arithmetic does not go below 0); where the anti-deflation floor above applies, the effective minimum is 50.
 
 DIMENSION 2 – Swiss Market Fit — weight 0.15
 
@@ -706,16 +708,16 @@ DIMENSION 5 – Structure and Readability — weight 0.15
 
 Score additively. Start at 0.
 
-+15 pts: strict reverse chronological order throughout with consistent date format (MM/YYYY or Month YYYY — not mixed)
-+15 pts: appropriate length for experience level: under 10 years = 1–2 pages; 10–20 years = 2–3 pages; over 20 years = max 3 pages
++20 pts: strict reverse chronological order throughout with consistent date format (MM/YYYY or Month YYYY — not mixed)
++20 pts: appropriate length for experience level: under 10 years = 1–2 pages; 10–20 years = 2–3 pages; over 20 years = max 3 pages
 +15 pts: early career handled correctly — roles from more than 15 years ago listed without bullet descriptions; no primary or secondary school listed if candidate is over 35
 +15 pts: clean document framing — no "Curriculum Vitae" title, no signature or date at bottom; on a multi-page CV the candidate's name appears in the page header of every page (so separated printed pages can be reunited)
-+10 pts: no unexplained employment gaps greater than 6 months
 +15 pts: pages are used fully — the final page is at least two-thirds full. A CV that ends in the middle of its last page signals inability to manage content ("never leave half a page empty"). If the chosen page count cannot be filled, the CV should be condensed to fewer full pages.
 +15 pts: information hierarchy — the top-left / first block after the name carries identity content (headline, summary, or key focus areas), not a dense personal-data or address block. The top-left is where a recruiter's eyes go first; contact details belong in a compact line or the page footer. Award 0 pts if the first thing a reader meets is a contact/personal-data table.
 
+EMPLOYMENT GAPS ARE NOT SCORED (anti-drift): the six criteria above are the complete D5 positive set (summing to 100). Do NOT award or deduct any points for employment gaps between roles — no such criterion exists in this rubric, and inventing one with a fabricated magnitude (e.g. "−30 for unexplained gaps") is a scoring error. A materially long gap may be surfaced as a NEUTRAL observation in commentary for the Committee member to raise with the Client — never as a score change and never as a red flag.
+
 HARD DEDUCTIONS:
--15 pts: unexplained gap greater than 6 months (deduct for each gap, max -30 pts)
 -10 pts: "Curriculum Vitae" present as document title
 -10 pts: signature or date present at document bottom
 -10 pts: final page is less than half full
@@ -1136,7 +1138,7 @@ const DIM_WEIGHTS = {
 };
 
 const SKILL_NAME = 'cv_review_generic';
-const SKILL_VERSION = '0.3.0';
+const SKILL_VERSION = '0.4.2';
 const SKILL_URL = 'https://github.com/Amarows/cfa_skills/blob/main/skills/cv_review_generic/SKILL.md';
 
 const MODEL_ID = 'claude-opus-4-8';
