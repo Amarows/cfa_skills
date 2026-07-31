@@ -2,7 +2,7 @@
 ## CLAUDE.md – Project Knowledge Base for Claude Code
 
 > **Last updated:** 2026-07  
-> **Current release:** app v0.4.1 (cv_review_generic v0.4.2 — HTML prompt reconciled to SKILL.md)  
+> **Current release:** **v0.4.3** — single tool version across app and shipped skills (see §10)  
 > **Repo:** https://github.com/Amarows/cfa_skills  
 > **Local path:** C:\Users\alexe_ne2qg0j\OneDrive\Files\Programming\Python\cfa_skills
 
@@ -27,16 +27,16 @@ cfa_skills/
 ├── CLAUDE.md                          ← this file
 ├── README.md
 ├── .gitignore                         ← excludes cv_samples/ (PII) and .idea/
-├── cfa_cv_review.html                 ← main application (single-page HTML, app v0.4.1; embedded prompt = cv_review_generic v0.4.2)
+├── cfa_cv_review.html                 ← main application (single-page HTML, v0.4.3)
 ├── cv_samples/                        ← LOCAL ONLY (gitignored): paired real CVs + expert feedback
 │   ├── CV_1.pdf  +  CV_1_feedback.docx
 │   ├── CV_2.pdf  +  CV_2_feedback.docx
 │   └── CV_3.pdf  +  CV_3_feedback.docx
 └── skills/
     ├── cv_review_generic/
-    │   └── SKILL.md                   ← 7-dimension generic CV scoring rubric (v0.4.2)
+    │   └── SKILL.md                   ← 7-dimension generic CV scoring rubric (v0.4.3)
     ├── cv_target_role_score/
-    │   └── SKILL.md                   ← role-fit extension (v0.3.0, 6 validated role profiles, two-call contract)
+    │   └── SKILL.md                   ← role-fit extension (v0.4.3, 6 validated role profiles, two-call contract)
     ├── cv_calibration_eval/           ← diff AI review vs expert feedback, read-only (v0.1.0)
     │   └── SKILL.md
     └── cv_rubric_refine/              ← batch rubric refinement from samples, human-gated (v0.1.0)
@@ -45,7 +45,7 @@ cfa_skills/
 
 ### Key File: cfa_cv_review.html
 
-Single-page HTML application. All CSS and JS are inline (no build step, no npm). Deployed by copying the file to a hosting location or opening locally. Features implemented as of v0.4.1:
+Single-page HTML application. All CSS and JS are inline (no build step, no npm). Deployed by copying the file to a hosting location or opening locally. Features implemented as of v0.4.3:
 
 - PDF and DOCX CV upload via `mammoth.convertToHtml` (DOCX) and PDF.js (PDF)
 - Hidden private cloud link detection via HTML extraction (security fix) – catches OneDrive/Dropbox/GDrive URLs that are hyperlinked but not visible as plain text
@@ -55,7 +55,7 @@ Single-page HTML application. All CSS and JS are inline (no build step, no npm).
 - Dark mode support via `prefers-color-scheme`
 - No server-side component; API key stored AES-GCM-encrypted in the page, decrypted in memory by the access password (PBKDF2, WebCrypto — issue #21). Rotation helper: `cv_samples/encrypt_key.py` (local)
 - Prompt caching (issue #17): system prompt sent as cached multi-block (`cache_control: ephemeral`); `max_tokens: 0` pre-warm fires once a valid password is entered; cache hit/miss shown in diagnostics panel
-- Role-fit scoring (issue #24, two-call architecture): optional role selector (6 profiles, cv_target_role_score v0.3.0) + JD paste field + per-role criteria info panel. Call 2 fires ONLY when a role/JD is given; receives Call 1's dimension scores as input, never re-scores them; blended overall recomputed locally. ROLE_PROFILES JS constant drives both the prompt and the info panel. Role-fit prompt deliberately uncached (~2k tokens < 4096 cacheable minimum)
+- Role-fit scoring (issue #24, two-call architecture): optional role selector (6 profiles, cv_target_role_score v0.4.3) + JD paste field + per-role criteria info panel. Call 2 fires ONLY when a role/JD is given; receives Call 1's dimension scores as input, never re-scores them; blended overall recomputed locally. ROLE_PROFILES JS constant drives both the prompt and the info panel. Role-fit prompt deliberately uncached (~2k tokens < 4096 cacheable minimum)
 
 ### GitHub Issue Backlog
 
@@ -69,7 +69,7 @@ Single-page HTML application. All CSS and JS are inline (no build step, no npm).
 
 ## 3. Skills
 
-### cv_review_generic (v0.4.2)
+### cv_review_generic (v0.4.3)
 
 The core scoring rubric. Encodes Karol Brodzinski's expert heuristics. Seven scoring dimensions:
 
@@ -89,9 +89,14 @@ The core scoring rubric. Encodes Karol Brodzinski's expert heuristics. Seven sco
 - Director-level seniority ceiling applies to Dimension 1: senior candidates without quantified achievements cannot score above a defined ceiling regardless of other signals
 - Consistency rule: a high dimension score paired with a recommendation that contradicts it is not permitted (e.g., scoring D1 at 80 then recommending adding quantified achievements)
 
+**Karol rulings encoded in v0.4.3** (email 2026-07-22, all three in D2):
+- **Languages** — CEFR codes and plain-text descriptors are equally acceptable, both score the full +20. The scored defect is the *graphical* rating (bars/dots/stars/x-of-5), which scores +10 and triggers a replace-the-visual recommendation. Never recommend converting clear plain text to CEFR.
+- **Photo** — proactively recommend adding a headshot when absent. Recommendation only, deliberately **not** a scored criterion, so D2 weights and the snapshot are untouched.
+- **Work eligibility** — a must-have. When absent it must appear as a named recommendation *and* in the Triage "Missing" block, not merely as a silent 20-point loss.
+
 **Calibration history:** Early versions inflated scores significantly. Root causes identified and fixed: wrong rubric encoding, missing dimensions, and incorrect weight application. Diagnostic tooling added to catch future drift.
 
-### cv_target_role_score (v0.3.0)
+### cv_target_role_score (v0.4.3)
 
 Extends `cv_review_generic` with an additional role-fit dimension (D7 in this skill, replacing the generic D7). Used when a specific job posting or role type is available. Adds role decomposition (must-have / nice-to-have / Swiss-specific criteria), gap analysis, and CV tailoring recommendations.
 
@@ -161,6 +166,20 @@ requests.put(
 ```
 Pre-warm call: a `max_tokens: 0` request with the cached system prompt fires once a valid access password is entered (prefill-only — writes the cache, bills no output tokens). This seeds the cache so the first real CV review also benefits from caching. Note: minimum cacheable prefix on Opus 4.8 is 4096 tokens; the rubric prompt is ~5.6k tokens, above the bar.
 
+**Two input paths — they differ in what the model can SEE. This drives prompt design:**
+
+| Input | How it is sent | Model's visual access |
+|---|---|---|
+| PDF | native `document` block, base64 (`cfa_cv_review.html`, `handleFile` → `cvBase64`) | **Sees rendered pages.** Photos, graphical language bars, real QR codes are all directly observable. |
+| DOCX | `mammoth.convertToHtml` → plain text + `[SECURITY SCAN RESULT]` prelude | **Text only.** Images are invisible; the pre-scan is the sole evidence channel for embedded images, hidden hyperlinks and footers. |
+
+Any prompt rule that depends on seeing something must therefore be
+input-conditional. A blanket "you cannot see images" instruction is wrong for
+PDFs; a blanket "look at the photo" instruction is wrong for DOCX. The v0.4.3
+photo rule and the graphical-language-bar rule are both written this way, and
+the DOCX pre-scan now emits an *affirmative* "no embedded image found" line so
+absence is evidence rather than a guess.
+
 **DOCX extraction:** `mammoth.convertToHtml` – security-safe, does not execute macros, extracts text and basic structure. Used in preference to direct XML parsing for the main flow.
 
 **Security detection:** After `mammoth.convertToHtml`, the HTML output is scanned for `<a href>` tags pointing to private cloud storage domains (onedrive.live.com, 1drv.ms, dropbox.com, drive.google.com, etc.). This catches links that are visually hidden in the CV (hyperlinked text with no visible URL) – a vector that plain-text extraction misses.
@@ -225,6 +244,8 @@ Conflicts between new knowledge and the existing rubric are **never auto-resolve
 | German-language CV support | Backlog | Phase 2 scope; requires Committee capacity to validate output |
 | LinkedIn promotion post | Pending | Alex prefers short, factual content; self-promotion noted as personally uncomfortable |
 | CV learning loop (§7) | In progress | First full cycle complete 2026-06-11: evals on CV_1–3 under Opus 4.8, golden snapshot baselined, refine batch 1 applied as cv_review_generic v0.3.0 (operator override at N=3). Next: Karol confirmation of D2/GPA encodings; next batch as CVs 4–6 arrive |
+| Karol ruling batch (languages / photo / eligibility) | Done (2026-07-31) | Shipped as v0.4.3, both renderings in lockstep. **Owed:** golden-snapshot re-run on CV_1–4 (blocked on API credit). Only scoring change is the D2 language criterion, which can only raise scores |
+| Unified versioning + version→release link | Done (2026-07-31) | One version across app and shipped skills (§10); page version hyperlinks to the GitHub release. Cutting the release tag is now part of shipping |
 | HTML↔SKILL.md reconciliation | Done (2026-07-22) | Live HTML prompt was stale at v0.3.0; ported all v0.4.1 guards (D7 QR anti-hallucination, D1 anti-deflation floor, D5 gap-scoring removal) + v0.4.2 photo policy into the embedded prompt. D5's freed 10 pts redistributed to reverse-chrono (+5) and length (+5) to keep the dimension summing to 100. **Owed:** golden-snapshot re-run on CV_1–3 (blocked on API credit) to confirm only-intended moves; Karol confirmation on the photo-positive policy |
 
 ---
@@ -241,13 +262,46 @@ Conflicts between new knowledge and the existing rubric are **never auto-resolve
 
 ## 10. Versioning Convention
 
-Files follow semantic versioning: `MAJOR.MINOR.PATCH`
+**One tool, one version** (adopted 2026-07-31, from v0.4.3). There is no
+separate app version and skill version. The web application and the shipped
+skills (`cv_review_generic`, `cv_target_role_score`) all carry the **same**
+number, so the version displayed on the page identifies the entire tool
+without ambiguity.
+
+Rationale: ~99% of changes land in the skills, and the previous split (app
+v0.4.1 / skill v0.4.2 / role skill v0.3.0) made it impossible to tell from
+the page which rubric was actually running.
+
+Semantic versioning `MAJOR.MINOR.PATCH` still applies, judged against the
+tool as a whole:
 
 - MAJOR: breaking change to scoring logic or output format
 - MINOR: new dimension, new heuristic section, or new quality control
 - PATCH: wording clarification, typo fix, minor rubric adjustment
 
-Version is declared in the YAML front matter of each SKILL.md and in the HTML `<title>` tag.
+**Where the version must be updated — all of these, in the same commit:**
+
+| Location | File |
+|---|---|
+| `<title>` tag | `cfa_cv_review.html` |
+| `<h1 class="site-title">` + release-link `href` | `cfa_cv_review.html` |
+| `SKILL_VERSION` constant | `cfa_cv_review.html` |
+| Embedded `SYSTEM_PROMPT` skill reference | `cfa_cv_review.html` |
+| Embedded `ROLE_FIT_PROMPT` + `ROLE_PROFILES` references | `cfa_cv_review.html` |
+| YAML `version:` + changelog entry | `skills/cv_review_generic/SKILL.md` |
+| YAML `version:` + changelog entry | `skills/cv_target_role_score/SKILL.md` |
+
+A skill unchanged in a given release still takes the version bump, with a
+changelog entry saying "no content change" — that is the cost of unified
+versioning and it is deliberate.
+
+**Exception:** `cv_calibration_eval` and `cv_rubric_refine` are offline
+operator tooling, never surfaced in the app, and keep independent versions.
+
+**Every version is a GitHub release.** Tag `vX.Y.Z` with notes describing
+what changed; the version number on the page hyperlinks to
+`https://github.com/Amarows/cfa_skills/releases/tag/vX.Y.Z`. Cutting the
+release is part of shipping — if it is skipped, the page links to a 404.
 
 ---
 

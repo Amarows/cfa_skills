@@ -1,6 +1,6 @@
 ---
 name: cv_review_generic
-version: 0.4.2
+version: 0.4.3
 description: >
   Review a Client CV when no specific target role is known.
   Scores the CV across seven dimensions grounded in Swiss financial
@@ -10,6 +10,37 @@ description: >
   or is open to multiple role types. Always hands off to
   cv_target_role_score when a target role is provided.
 changelog:
+  - version: 0.4.3
+    date: 2026-07-31
+    changes: >
+      Karol ruling batch (source: Karol Brodzinski email 2026-07-22,
+      confidence: high — direct expert ruling on three open questions).
+      From this version the repository uses a SINGLE tool version: the
+      web application and the shipped skills all carry the same number,
+      so the version shown on the page identifies the whole tool.
+      (1) D2 languages — CEFR codes (A1-C2) and clear plain-text
+      descriptors ("Native", "Fluent", "Professional working") are now
+      EQUALLY acceptable and both earn the full +20. The previous rule
+      awarded +20 only for CEFR and half credit for plain text, which
+      penalised exactly the language section Karol praised. The scored
+      failure mode is now the GRAPHICAL proficiency indicator (bars,
+      dots, stars, filled squares, x/5 scales) — Karol: "what is not
+      really good is when people add bulks to define their levels".
+      (2) D2 photo — the v0.4.2 policy (never penalise, never recommend
+      removal) is confirmed by Karol and extended: when no photo is
+      present the tool now PROACTIVELY recommends adding a professional
+      headshot for the Swiss/DACH market. Recommendation only, NOT a
+      scored criterion — D2 keeps its five criteria and its existing
+      weights, so this adds no score movement.
+      (3) D2 work eligibility — promoted from "rewarded if present" to
+      a MUST-HAVE. Absence must now surface in the Triage "Missing"
+      block and as a named recommendation; previously it was only a
+      silent loss of 20 points that the Client never saw. Point value
+      unchanged at +20.
+      Owed before ship: golden-snapshot re-run on CV_1-4. The language
+      criterion is the only scoring change and it can only raise scores
+      (plain-text language sections that previously scored +10 now score
+      +20); graphical indicators are a new deduction path.
   - version: 0.4.2
     date: 2026-07-22
     changes: >
@@ -122,7 +153,14 @@ from the CV. This block is internal – do not show it to the Client.
 - Full name present (Y/N)
 - Contact details: phone, email, location (Y/N each)
 - LinkedIn URL: present and fully written out, not hidden behind text or QR code (Y/N)
-- Photo included (Y/N)
+- Photo included (Y / N / unknown). **Input-conditional — do not guess.**
+  For native PDF input the rendered pages are visible: judge directly.
+  For extracted DOCX text you cannot see images — take the answer from
+  the application's pre-scan block, which reports either an embedded
+  raster image (= photo present) or explicitly no embedded image
+  (= photo absent). Record `unknown` when neither source settles it;
+  `unknown` suppresses the D2 photo recommendation's assertive wording
+  (see Dimension 2).
 - Date of birth present (Y/N) — flag if yes
 - Nationality / civil status present (Y/N) — flag if yes
 - Work permit status stated (Y/N; value if stated)
@@ -162,7 +200,19 @@ from the CV. This block is internal – do not show it to the Client.
 - Certifications: list all, note prominence (top of CV / education section / buried)
 
 **Languages:**
-- Languages listed with proficiency format (stars / European Framework / written label / native)
+- Languages listed, and for each the proficiency FORMAT used. Record the
+  format as one of: `cefr` (A1–C2 codes), `plain-text` (a written
+  descriptor such as Native / Fluent / Professional working / Basic),
+  `graphical` (bars, dots, stars, filled squares, x-out-of-5 scales, or
+  any other visual rating), `none` (language named with no level given).
+  Both `cefr` and `plain-text` are acceptable formats; `graphical` is
+  the one to flag.
+- Graphical indicators are only reliably observable when the rendered
+  document is visible (native PDF input). In extracted DOCX text a
+  bar drawn as a shape leaves no trace — record `graphical` only on
+  positive evidence (visible rating glyphs such as ●●●○○ / ★★★☆☆, an
+  "x/5" or "4 out of 5" construction, or a visibly rendered bar).
+  Never infer `graphical` from absence of a level label.
 
 **Other sections:**
 - Military service (Y/N) — note for Swiss context
@@ -262,27 +312,72 @@ within-band deduction, not a path to zero.
 
 | Criterion | Points |
 |---|---|
-| Work-eligibility signal explicitly stated (permit type, EU/EFTA citizenship, or Swiss status) | +20 |
-| Languages listed with European Framework levels or equivalent | +20 |
+| Work-eligibility signal explicitly stated (permit type, EU/EFTA citizenship, or Swiss status) — **must-have** | +20 |
+| Languages listed with proficiency in an accepted format: CEFR codes (A1–C2) **or** a clear plain-text descriptor | +20 |
 | Swiss employer names or Swiss regulatory context referenced | +20 |
 | Location in Switzerland stated | +20 |
 | Date of birth and civil/family status absent | +20 |
 
-**Eligibility vs. personal data (issue #19, refine batch 1):**
+**Language proficiency format (Karol ruling, 2026-07-22):**
+CEFR codes and plain-text descriptors are EQUALLY acceptable — award the
+full +20 for either. "German: C2, English: C1" and "German: native,
+English: fluent, French: professional working" are both good practice.
+Do NOT recommend converting a clear plain-text section into CEFR codes;
+that recommendation is now a rubric error, not an improvement.
+
+What *is* a defect is the **graphical proficiency indicator** — bars,
+dots, stars, filled squares, x-out-of-5 scales. Karol: *"what is not
+really good is when people add bulks to define their levels — so visual
+'description'"*. A graphical rating is imprecise (nobody knows what four
+of five dots means), does not survive applicant-tracking systems, and
+looks decorative rather than professional. When the observed-facts
+language format is `graphical`:
+- award **+10 instead of +20** for this criterion (the languages are
+  still communicated, just in a poor format), and
+- issue a recommendation to replace the visual rating with CEFR codes
+  or plain-text descriptors — the candidate's choice of the two.
+
+Award **0** only when languages carry no proficiency indication at all,
+or no language section exists.
+
+**Work eligibility is a must-have (Karol ruling, 2026-07-22):**
 Work-eligibility information (e.g. "Swiss Permit B (EU national)",
 "Swiss citizen") removes a concrete hiring obstacle — Swiss employers
-need cantonal approval for non-EU hires — and must NEVER be
-recommended for removal. Date of birth and civil/family status carry
-bias risk and no hiring value: recommend removing those only. Bare
-nationality with no eligibility relevance is neutral — neither
-rewarded nor penalised.
+need cantonal approval for non-EU hires. Karol's ruling on whether to
+include it: *"it is a must"*. Therefore:
+- It must NEVER be recommended for removal.
+- When it is **absent**, that absence must be surfaced explicitly — as
+  a named D2 recommendation ("state your work eligibility in the contact
+  block, e.g. 'Swiss citizen' or 'Permit C'") **and** as an entry in the
+  Triage "Missing" block. A silent 20-point deduction the Client never
+  sees is not acceptable for a must-have.
+- Priority ranking is unchanged: this does not displace achievement
+  evidence from Priority 1 unless nothing more material is wrong.
 
-**Professional photo (Swiss convention):** a professional headshot is a
-normal and accepted convention on Swiss CVs and reads as a positive
-Swiss-market signal. Never penalise it and never recommend its removal;
-surface it as a strength in commentary. This is distinct from date of
-birth and civil/family status, which must still be recommended for
-removal even when they accompany a photo. *Pending Karol confirmation.*
+Date of birth and civil/family status carry bias risk and no hiring
+value: recommend removing those only. Bare nationality with no
+eligibility relevance is neutral — neither rewarded nor penalised.
+
+**Professional photo (Swiss convention) — confirmed and extended by
+Karol, 2026-07-22:** a professional headshot is a normal and accepted
+convention on Swiss CVs and reads as a positive Swiss-market signal.
+Never penalise it and never recommend its removal; surface it as a
+strength in commentary. Karol's ruling extends this to the absent case:
+*"the tool should proactively suggest adding a photo"*.
+- Photo present → note as a strength.
+- Photo absent (established positively per Step 1) → recommend adding a
+  professional headshot, framed as Swiss/DACH market convention.
+- Photo `unknown` → use conditional wording only ("if your CV does not
+  already include a professional headshot, consider adding one — it is
+  standard in the Swiss market"). Never assert that a photo is missing
+  from a document whose images you could not observe.
+
+This is a **recommendation, not a scored criterion** — D2 keeps the five
+scored criteria in the table above and their existing point values. The
+absence of a photo costs the Client nothing in score.
+
+This is distinct from date of birth and civil/family status, which must
+still be recommended for removal even when they accompany a photo.
 
 **Karol's notes on Swiss specifics:**
 - Military service section: positive signal for Swiss roles; neutral
@@ -290,8 +385,11 @@ removal even when they accompany a photo. *Pending Karol confirmation.*
 - Zunft membership or Swiss guild/civil society involvement: positive
   signal; recommend placing in Extracurricular Activities rather than
   Hobbies to give it appropriate weight.
-- Language star ratings are redundant alongside European Framework
-  labels; advise removing stars and keeping framework reference only.
+- Language star / bar / dot ratings are a defect in their own right, not
+  merely redundant alongside a written level: advise removing the visual
+  rating and stating the level as a CEFR code or a plain-text descriptor.
+  Either written form is acceptable — do not push CEFR on a candidate
+  who has already described their levels clearly in words.
 
 ---
 
@@ -505,6 +603,11 @@ Produce a structured triage summary in the following format:
 
 **Missing sections recommended:**
 - [List sections absent but expected for this seniority/profile]
+- A missing work-eligibility line is a **must-have** omission and must
+  appear here whenever it is absent (see Dimension 2).
+- A missing professional photo should appear here for Swiss-market CVs,
+  worded per the Dimension 2 photo rule (assertive when absence is
+  established, conditional when photo presence is `unknown`).
 
 ---
 

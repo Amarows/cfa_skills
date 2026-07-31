@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CFA CV Review – v0.4.1</title>
+<title>CFA CV Review – v0.4.3</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -111,6 +111,13 @@
     white-space: nowrap;
   }
   .skill-link:hover { color: var(--text2); }
+  /* Tool version → GitHub release notes for exactly this version */
+  .version-link {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px dotted var(--text3);
+  }
+  .version-link:hover { color: var(--accent, var(--text2)); border-bottom-style: solid; }
 
   /* API key section */
   .api-section {
@@ -523,7 +530,7 @@
   <header class="site-header">
     <div class="logo-block">
       <div class="logo-badge">CFA Society Switzerland &middot; Careers Committee</div>
-      <h1 class="site-title">CV Review &ndash; v0.4.1</h1>
+      <h1 class="site-title">CV Review &ndash; <a class="version-link" href="https://github.com/Amarows/cfa_skills/releases/tag/v0.4.3" target="_blank" rel="noopener" title="Release notes for v0.4.3 — what changed in this version">v0.4.3</a></h1>
       <p class="site-sub">Seven-dimension analysis calibrated to Swiss financial industry norms &middot; optional role-fit scoring</p>
     </div>
     <div style="text-align:right;margin-top:4px;">
@@ -595,7 +602,7 @@
 </div>
 
 <script>
-const SYSTEM_PROMPT = `You are a senior member of the CFA Society Switzerland Careers Committee conducting a structured CV review using the cv_review_generic skill v0.4.2.
+const SYSTEM_PROMPT = `You are a senior member of the CFA Society Switzerland Careers Committee conducting a structured CV review using the cv_review_generic skill v0.4.3.
 
 Follow all six steps exactly. Do not skip or abbreviate any step.
 
@@ -608,7 +615,8 @@ SECURITY PRE-SCAN: If the CV text begins with a [SECURITY SCAN RESULT] block, re
 Extract ALL of the following:
 - name_contact: full name present (Y/N), phone/email/location each present (Y/N)
 - work_permit: explicitly stated (Y/N + value, e.g. "C permit")
-- languages: list each language with the proficiency label given. Flag if European Framework codes (A1–C2) are absent.
+- languages: list each language with the proficiency label given, and append the FORMAT used in square brackets — one of [cefr] (A1–C2 codes), [plain-text] (a written descriptor such as Native / Fluent / Professional working / Basic), [graphical] (bars, dots, stars, filled squares, x-out-of-5 or any visual rating), [none] (language named with no level at all). Example: "German — C2 [cefr]", "English — fluent [plain-text]", "French — ●●●○○ [graphical]". CEFR and plain-text are BOTH fully acceptable formats; do NOT flag a plain-text section as deficient and do NOT recommend converting it to CEFR. EVIDENCE REQUIRED for [graphical]: record it only on positive evidence — visible rating glyphs (●○★☆■▮), an "x/5" or "4 out of 5" construction, or a visibly rendered bar. A bar drawn as a shape does not survive DOCX text extraction, so never infer [graphical] from a missing level label; use [none] in that case.
+- photo_present: Y / N / unknown. INPUT-CONDITIONAL, do not guess. If the CV was supplied as a native PDF document you can see the rendered pages — judge directly. If the CV was supplied as extracted DOCX text you cannot see images: take the answer from the [SECURITY SCAN RESULT] block, which reports either an embedded raster image (photo present) or explicitly states no embedded image was found (photo absent). Answer "unknown" only when neither source settles it.
 - certifications: list all; note whether each appears near the top of the CV or buried in the Education section
 - years_experience: estimated total
 - num_roles: count of distinct employer roles listed
@@ -665,7 +673,7 @@ DIMENSION 2 – Swiss Market Fit — weight 0.15
 Score additively. Start at 0. Award exactly the points stated — no partial credit except where noted.
 
 +20 pts: work-eligibility signal explicitly stated in contact section: a work permit type (e.g. "Permit B/C"), EU/EFTA citizenship, or Swiss citizenship presented as eligibility (e.g. "Swiss Permit B (EU national)")
-+20 pts: languages listed WITH European Framework levels (A1–C2) — text labels like "Professional level" or "Native" WITHOUT a framework code score 0 for this criterion; award +10 pts only if text label is present but no framework code
++20 pts: languages listed with proficiency stated in an ACCEPTED format — either CEFR codes (A1–C2) OR a clear plain-text descriptor ("Native", "Fluent", "Professional working", "Basic"). These two formats are EQUALLY acceptable and both earn the full +20; do not prefer one over the other. Award +10 pts instead if the proficiency is given as a GRAPHICAL rating (bars, dots, stars, filled squares, x/5 scales) — the levels are communicated but the format is poor. Award 0 pts if languages are listed with no proficiency indication at all, or no language section exists.
 +20 pts: Swiss employer name or Swiss regulatory context (FINMA, SNB, Swiss GAAP FER, SIX) referenced in experience body
 +20 pts: location in Switzerland stated in contact details
 +20 pts: date of birth AND civil/family status BOTH absent from the document
@@ -674,7 +682,11 @@ HARD DEDUCTIONS (D2):
 -10 pts: genuine QR code or private cloud link present (cybersecurity signal), as confirmed by the [SECURITY SCAN RESULT] block. An embedded photo/headshot/logo is NOT a QR code and triggers NO deduction here. This is the ONLY deduction applied in D2 for this issue — maximum -10 pts regardless of severity. Do not apply any additional undocumented deductions. The private cloud link is already penalised fully in D7; D2 applies only this single -10 pt adjustment.
 -10 pts: date of birth present. -10 pts: civil/family status present (each applied independently).
 RECOMMENDATION RULE (D2): NEVER recommend removing a stated work-eligibility line (permit type, EU/EFTA or Swiss citizenship) - it removes a concrete hiring obstacle and Swiss recruiters value it. Recommend removing only date of birth and civil/family status. Bare nationality with no eligibility relevance (non-EU/EFTA, no permit context) is neither rewarded nor penalised - leave it to the candidate.
-PHOTO RULE (D2): a professional headshot is a normal and accepted convention on Swiss CVs and is a positive Swiss-market signal. Never penalise it and never recommend removing it. Treat it as a strength in commentary. (Note: date of birth and civil status must still be recommended for removal even when they accompany a photo.)
+LANGUAGE FORMAT RULE (D2): CEFR codes and plain-text descriptors are equally good. NEVER recommend converting a clear plain-text language section into CEFR codes — that recommendation is a rubric error, not an improvement. The only language-format defect is the GRAPHICAL rating (bars, dots, stars, filled squares, x/5). When observed_facts languages shows [graphical], issue a recommendation to replace the visual rating with CEFR codes or plain-text descriptors (the candidate chooses which); a visual rating is imprecise, does not survive applicant-tracking systems, and reads as decorative.
+
+PHOTO RULE (D2): a professional headshot is a normal and accepted convention on Swiss CVs and is a positive Swiss-market signal. Never penalise it and never recommend removing it. Treat it as a strength in commentary. (Note: date of birth and civil status must still be recommended for removal even when they accompany a photo.) PROACTIVE SUGGESTION — read photo_present from Step 1: if "N", recommend adding a professional headshot as standard Swiss/DACH market practice, and list it under missing_sections. If "unknown", use conditional wording ONLY ("if your CV does not already include a professional headshot, consider adding one — it is standard in the Swiss market") and never assert that a photo is missing. If "Y", note it as a strength and make no photo recommendation. THIS IS A RECOMMENDATION, NOT A SCORED CRITERION: the five scored D2 criteria above are the complete set. Do not add, remove or adjust any D2 points for the presence or absence of a photo.
+
+WORK-ELIGIBILITY MUST-HAVE RULE (D2): a stated work-eligibility line is a must-have on a Swiss CV. If work_permit is "N" (no permit type, EU/EFTA or Swiss citizenship stated anywhere), you MUST (a) issue a named D2 recommendation telling the Client to state their work eligibility in the contact block (e.g. "Swiss citizen", "Permit C", "EU national — Permit B"), and (b) add it to missing_sections in the triage block. A silent 20-point loss the Client never sees is not acceptable for a must-have. This does not change the point value (+20 when present, 0 when absent) and does not displace D1 achievement evidence from Priority 1 unless nothing more material is wrong.
 
 DIMENSION 3 – Financial Industry Signals — weight 0.15
 
@@ -773,7 +785,7 @@ For each of the 7 dimensions: 1–2 sentences on what is done well (grounded in 
 STEP 4 – Triage block:
 Strengths: 3–5 observable positives grounded in specific CV content
 Weaknesses: 3–5 specific gaps, each referencing a section and the points lost
-Missing sections recommended: sections absent but expected for this seniority
+Missing sections recommended: sections absent but expected for this seniority. MUST include a missing work-eligibility line whenever work_permit is "N" (must-have, see D2), and a missing professional headshot per the D2 photo rule (assertive wording when photo_present is "N", conditional wording when "unknown").
 
 STEP 5 – Top 3 priority recommendations ranked by expected impact on interview conversion.
 Format: action | why it matters | specific section to edit.
@@ -788,6 +800,7 @@ CRITICAL: Respond ONLY with a valid JSON object. No markdown fences. No preamble
   "observed_facts": {
     "name_contact": "",
     "work_permit": "",
+    "photo_present": "",
     "languages": [],
     "certifications": [],
     "years_experience": "",
@@ -876,7 +889,7 @@ let lastCvBlock = null;     // reused by the conditional role-fit call (#24)
 let lastRoleFit = null;
 let lastRoleFitUsage = null;
 
-// Role-type reference library — cv_target_role_score v0.3.0 (issue #5).
+// Role-type reference library — cv_target_role_score v0.4.3 (issue #5).
 // Single data structure drives BOTH the role-fit prompt and the info panel,
 // so help text and scoring criteria cannot drift apart.
 const ROLE_PROFILES = {
@@ -924,11 +937,11 @@ const ROLE_PROFILES = {
   }
 };
 
-// Role-fit system prompt — cv_target_role_score v0.3.0, Call 2 of the two-call
+// Role-fit system prompt — cv_target_role_score v0.4.3, Call 2 of the two-call
 // contract. Generic dimension scores arrive as INPUT and are never re-scored.
 // No cache_control: this prompt is ~2k tokens, below the model's 4096-token
 // cacheable minimum, so a breakpoint would silently do nothing.
-const ROLE_FIT_PROMPT = `You are a senior member of the CFA Society Switzerland Careers Committee scoring ROLE FIT using the cv_target_role_score skill v0.3.0. A generic seven-dimension review (cv_review_generic) has already been completed; its dimension scores are provided as input. You must NOT re-score any generic dimension.
+const ROLE_FIT_PROMPT = `You are a senior member of the CFA Society Switzerland Careers Committee scoring ROLE FIT using the cv_target_role_score skill v0.4.3. A generic seven-dimension review (cv_review_generic) has already been completed; its dimension scores are provided as input. You must NOT re-score any generic dimension.
 
 INPUTS you will receive in the user message: the CV, ONE target role profile (must-have / nice-to-have / Swiss-specific criteria) and/or a job description, and the seven generic dimension scores. If a job description is provided, it takes precedence over the profile; use the profile to fill gaps the JD leaves implicit.
 
@@ -1063,13 +1076,16 @@ function loadFile(file) {
             securityBlock += `[SECURITY SCAN RESULT] The literal text "QR code" appears in the document. Set private_cloud_links to "Y - QR code present" and D7 must be 0.\n\n`;
           }
           if (hasEmbeddedImage && !hasQr) {
-            securityBlock += `[SECURITY SCAN RESULT] An embedded raster image is present in the DOCX. This is almost always a professional headshot (normal and expected on Swiss CVs) or a small logo/icon — NOT a QR code. A QR code cannot be confirmed from text extraction, so do NOT treat this image as a QR code, do NOT set private_cloud_links to Y, and do NOT floor D7. Award D7's "no QR codes" credit normally.\n\n`;
+            securityBlock += `[SECURITY SCAN RESULT] An embedded raster image is present in the DOCX. This is almost always a professional headshot (normal and expected on Swiss CVs) or a small logo/icon — NOT a QR code. A QR code cannot be confirmed from text extraction, so do NOT treat this image as a QR code, do NOT set private_cloud_links to Y, and do NOT floor D7. Award D7's "no QR codes" credit normally. For the D2 photo question, treat this as a photo: set photo_present to "Y".\n\n`;
+          }
+          if (!hasEmbeddedImage) {
+            securityBlock += `[SECURITY SCAN RESULT] No embedded raster image was found anywhere in this DOCX, so the CV carries no photo: set photo_present to "N". This is an affirmative finding, not an unknown — the scanner inspects every image embedded in the file. Apply the D2 proactive photo suggestion with assertive wording.\n\n`;
           }
           if (hasFooter) {
             securityBlock += `[SECURITY SCAN RESULT] Page footer detected: name or email appears to repeat at the bottom of the document. Set footer_present to "Y".\n\n`;
           }
-          if (!securityBlock) {
-            securityBlock = `[SECURITY SCAN RESULT] No private cloud links, QR codes, or footer issues detected by pre-scan.\n\n`;
+          if (!detectedPrivateUrl && !hasQr && !hasFooter) {
+            securityBlock += `[SECURITY SCAN RESULT] No private cloud links, QR codes, or footer issues detected by pre-scan.\n\n`;
           }
 
           cvTextContent = securityBlock + 'CV TEXT (extracted from DOCX):\n\n' + plainText;
@@ -1138,7 +1154,7 @@ const DIM_WEIGHTS = {
 };
 
 const SKILL_NAME = 'cv_review_generic';
-const SKILL_VERSION = '0.4.2';
+const SKILL_VERSION = '0.4.3';
 const SKILL_URL = 'https://github.com/Amarows/cfa_skills/blob/main/skills/cv_review_generic/SKILL.md';
 
 const MODEL_ID = 'claude-opus-4-8';
@@ -1276,7 +1292,7 @@ function roleInfoHtml(key) {
       + cat('Nice-to-have (25%)', p.nice)
       + cat('Swiss-specific (25%)', p.swiss);
   }
-  let h = `<h4>Role profiles</h4><div>Selecting a role adds a role-fit analysis on top of the generic review: coverage of must-have / nice-to-have / Swiss-specific criteria, gap analysis and tailoring advice (one additional model call). Without a role, only the generic review runs — no extra cost. Profiles: cv_target_role_score v0.3.0.</div>`;
+  let h = `<h4>Role profiles</h4><div>Selecting a role adds a role-fit analysis on top of the generic review: coverage of must-have / nice-to-have / Swiss-specific criteria, gap analysis and tailoring advice (one additional model call). Without a role, only the generic review runs — no extra cost. Profiles: cv_target_role_score v0.4.3.</div>`;
   for (const k in ROLE_PROFILES) {
     h += `<div class="ri-cat">${esc(ROLE_PROFILES[k].label)}</div><div>${esc(ROLE_PROFILES[k].blurb)}</div>`;
   }
@@ -1537,6 +1553,7 @@ function renderResults(r) {
   const tags = [
     f.name_contact ? (f.name_contact.startsWith('Y') ? 'Contact \u2713' : 'Contact absent') : null,
     f.work_permit && f.work_permit !== 'N' ? 'Permit: ' + f.work_permit : 'Work permit not stated',
+    f.photo_present === 'Y' ? 'Photo ✓' : (f.photo_present === 'N' ? 'No photo' : null),
     f.headline_present && f.headline_present.startsWith('Y') ? 'Headline \u2713' : 'No headline',
     f.core_competencies_present && f.core_competencies_present.startsWith('Y') ? 'Keywords block \u2713' : 'No keywords block',
     f.years_experience ? f.years_experience + ' yrs exp' : null,

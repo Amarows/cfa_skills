@@ -1,6 +1,6 @@
 ---
 name: cv_target_role_score
-version: 0.3.0
+version: 0.4.3
 description: >
   Score and review a Client CV against one or more specific target
   roles in the Swiss financial industry. Extends cv_review_generic
@@ -8,6 +8,15 @@ description: >
   Use when the Client has identified a specific role, job posting,
   or role type they are targeting.
 changelog:
+  - version: 0.4.3
+    date: 2026-07-31
+    changes: >
+      Version-scheme change only — no content change. The repository now
+      carries a SINGLE tool version across the web application and the
+      shipped skills, so that the version displayed on the page
+      identifies the whole tool unambiguously. This skill jumps 0.3.0 ->
+      0.4.3 to join the unified sequence; its scoring logic, the
+      two-call contract and the six role profiles are untouched.
   - version: 0.3.0
     date: 2026-06-11
     changes: >
