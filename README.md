@@ -17,6 +17,7 @@ The Committee helps members and candidates find employment in the Swiss financia
 cfa_skills/
 ├── CLAUDE.md                          # Project charter – targets, architecture, roadmap
 ├── README.md                          # This file
+├── cfa_cv_review.html                 # The application – open this file or use the hosted link above
 └── skills/
     ├── cv_review_generic/
     │   └── SKILL.md                   # CV review when no target role is known

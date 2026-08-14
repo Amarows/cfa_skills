@@ -1,10 +1,10 @@
 # CFA Society Switzerland – CV Review Tool
 ## CLAUDE.md – Project Knowledge Base for Claude Code
 
-> **Last updated:** 2026-07  
+> **Last updated:** 2026-08-14  
 > **Current release:** **v0.4.3** — single tool version across app and shipped skills (see §10)  
-> **Repo:** https://github.com/Amarows/cfa_skills  
-> **Local path:** C:\Users\alexe_ne2qg0j\OneDrive\Files\Programming\Python\cfa_skills
+> **Repo:** https://github.com/Amarows/cfa_skills (public)  
+> **Local path:** C:\Users\alexe_ne2qg0j\OneDrive\Files\Programming\Python\cfa_skills — also hosts confidential, non-public consulting work in the same folder (see "Other Active Workstreams" below)
 
 ---
 
@@ -18,6 +18,17 @@
 
 Phase 1 – Committee internal use. A Committee member uploads a CV, the tool scores it, and the member reviews the AI output before sending it to the client. No client-facing access yet.
 
+### Other Active Workstreams (Confidential — Not Part of This Public Repo)
+
+This local working directory also hosts two consulting workstreams Alex runs for CFA Society Switzerland leadership, unrelated in content to the CV tool but tracked in the same folder for convenience:
+
+- **AI policy advisory** — tracked as GitHub issue [#26](https://github.com/Amarows/cfa_skills/issues/26) (backlog entry only, no confidential content in the issue).
+- **Foundational AI training for the Society's office team** — tracked as GitHub issue [#25](https://github.com/Amarows/cfa_skills/issues/25). Materials production has not started yet; deliberately gated behind the policy workstream finishing first.
+
+The durable working doc for both is `AI_TRAINING.md` in the repo root (status, decisions, timeline, blockers). Deliverables and source materials live in `policy/`, meeting notes in `meetings/`, in-progress training assets in `training/`. **All four are gitignored — local only, never committed.**
+
+**Confidentiality boundary — read before editing this file or README.md:** this `CLAUDE.md` and `README.md` are committed to a **public** repository. Client names, policy findings, legal analysis, org-internal specifics, or any other engagement detail from the two workstreams above must never be written into this file, `README.md`, or any other committed file — only into `AI_TRAINING.md`, `policy/`, `meetings/` (all gitignored) or Claude Code's local memory (also outside the repo).
+
 ---
 
 ## 2. Repository Structure
@@ -26,12 +37,16 @@ Phase 1 – Committee internal use. A Committee member uploads a CV, the tool sc
 cfa_skills/
 ├── CLAUDE.md                          ← this file
 ├── README.md
-├── .gitignore                         ← excludes cv_samples/ (PII) and .idea/
+├── .gitignore                         ← excludes all LOCAL ONLY paths below, plus credentials.md/*.pw/.env/.idea/
 ├── cfa_cv_review.html                 ← main application (single-page HTML, v0.4.3)
 ├── cv_samples/                        ← LOCAL ONLY (gitignored): paired real CVs + expert feedback
 │   ├── CV_1.pdf  +  CV_1_feedback.docx
 │   ├── CV_2.pdf  +  CV_2_feedback.docx
 │   └── CV_3.pdf  +  CV_3_feedback.docx
+├── AI_TRAINING.md                     ← LOCAL ONLY (gitignored): master doc, policy + training workstreams (see §1)
+├── policy/                            ← LOCAL ONLY (gitignored): policy review deliverables + source docs
+├── meetings/                          ← LOCAL ONLY (gitignored): meeting notes for the two consulting workstreams
+├── training/                          ← LOCAL ONLY (gitignored): in-progress training materials/assets
 └── skills/
     ├── cv_review_generic/
     │   └── SKILL.md                   ← 7-dimension generic CV scoring rubric (v0.4.3)

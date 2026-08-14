@@ -1,6 +1,12 @@
 # Personal data – never commit
 cv_samples/
 
+# Confidential client documents & engagement notes – never commit (repo is PUBLIC)
+policy/
+AI_TRAINING.md
+meetings/
+training/
+
 # Secrets – never commit
 credentials.md
 *.pw
